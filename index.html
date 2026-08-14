@@ -5,7 +5,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f5f3;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic",sans-serif}
 header{background:#fff;border-bottom:1px solid #ddd;padding:10px;display:flex;gap:9px;align-items:end;flex-wrap:wrap;position:sticky;top:0;z-index:20}
 .g label{display:block;font-size:11px;font-weight:700;margin-bottom:4px}select,button{height:42px;border:1px solid #ccc;border-radius:8px;background:#fff;font-size:14px;padding:0 10px}
-.modes{display:flex}.modes button{border-radius:0}.modes button:first-child{border-radius:8px 0 0 8px}.modes button:last-child{border-radius:0 8px 8px 0}.modes button+button{border-left:0}
+.modes{display:flex;flex-wrap:nowrap}.modes button{border-radius:0}.modes button:first-child{border-radius:8px 0 0 8px}.modes button:last-child{border-radius:0 8px 8px 0}.modes button+button{border-left:0}
 button.on{background:#292d32;color:#fff}.scroll{overflow:auto;padding:14px}.area{position:relative;margin:auto}.board{position:absolute;left:70px;top:5px;height:390px;background:#fff;border-right:2px solid #444}
 .nut{position:absolute;left:0;top:0;bottom:0;width:25px;background:#292929;border-radius:8px;z-index:5}.fret{position:absolute;top:0;bottom:0;width:3px;background:#777;z-index:3}
 .string{position:absolute;left:25px;right:0;background:#444;z-index:4}.wound{background:repeating-linear-gradient(90deg,#777 0 3px,#ddd 3px 5px,#777 5px 8px)}
@@ -18,7 +18,7 @@ body.ipad .scroll{zoom:1.05}body.iphone .scroll{zoom:.72}body.large .scroll{zoom
 </style></head><body>
 <header>
 <div class=g><label>Root</label><select id=root></select></div>
-<div class=g><label>タップ表示モード</label><div class=modes><button data-m=none class=on>非表示</button><button data-m=note>音名 C D…</button><button data-m=int>度数 R 3 5…</button><button data-m=both>両方</button></div></div>
+<div class=g><label>表示モード</label><div class=modes><button data-m=none class=on>非表示</button><button data-m=note>音名 C D…</button><button data-m=int>度数 R 3 5…</button><button data-m=tension>テンション</button><button data-m=both>両方</button></div></div>
 <div class=g><label>音</label><button id=sound>🔇 OFF</button></div>
 <div class=g><label>画面サイズ</label><select id=size><option value=auto>自動</option><option value=ipad>iPad</option><option value=iphone>iPhone</option><option value=large>大きく</option></select></div>
 <div class=g><label>フレット</label><select id=range><option value=24>0–24</option><option value=15>0–15</option><option value=12>0–12</option></select></div>
@@ -26,13 +26,13 @@ body.ipad .scroll{zoom:1.05}body.iphone .scroll{zoom:.72}body.large .scroll{zoom
 <div class=scroll><div id=area class=area><div id=board class=board></div></div></div>
 <div class=result><div>タップした音</div><div id=big class=big>−</div><div id=sub class=sub>音OFFでも表示できます</div></div>
 <script>
-const N=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"],I=["R","♭2","2","♭3","3","4","♯4","5","♭6","6","♭7","7"],O=[64,59,55,50,45,40],SN=["E","B","G","D","A","E"];
+const N=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"],I=["R","m2","△2","m3","△3","P4","♭5","P5","m6","△6","m7","△7"],T=["R","♭9","9","♯9","△3","11","♯11","P5","♭13","13","m7","△7"],O=[64,59,55,50,45,40],SN=["E","B","G","D","A","E"];
 let mode="none",snd=false,ctx=null,maxF=24;
 const root=document.getElementById("root"),board=document.getElementById("board"),area=document.getElementById("area");
 N.forEach((x,i)=>root.add(new Option(x,i)));
-function nn(m){return N[m%12]}function iv(m){return I[(m%12-Number(root.value)+12)%12]}
-function cls(x){return({R:"R","2":"I2","3":"I3","4":"I4","5":"I5","6":"I6","♭7":"Ib7","7":"I7"})[x]||"other"}
-function txt(m){return mode==="note"?nn(m):mode==="int"?iv(m):mode==="both"?nn(m)+" "+iv(m):""}
+function nn(m){return N[m%12]}function iv(m){return I[(m%12-Number(root.value)+12)%12]}function tv(m){return T[(m%12-Number(root.value)+12)%12]}
+function cls(x){return({R:"R","△2":"I2","△3":"I3","P4":"I4","P5":"I5","△6":"I6","m7":"Ib7","△7":"I7"})[x]||"other"}
+function txt(m){return mode==="note"?nn(m):mode==="int"?iv(m):mode==="tension"?tv(m):mode==="both"?nn(m)+" "+iv(m):""}
 async function unlock(){const AC=window.AudioContext||window.webkitAudioContext;if(!ctx)ctx=new AC();if(ctx.state==="suspended")await ctx.resume();let b=ctx.createBuffer(1,1,22050),s=ctx.createBufferSource();s.buffer=b;s.connect(ctx.destination);s.start()}
 async function play(m){if(!snd)return;await unlock();let t=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.type="triangle";o.frequency.value=440*Math.pow(2,(m-69)/12);g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+.8);o.connect(g);g.connect(ctx.destination);o.start();o.stop(t+.82)}
 function draw(){
@@ -52,7 +52,7 @@ for(let f=1;f<=maxF;f++){let d=document.createElement("div");d.className="fret";
   })
 });
 ys.forEach((y,s)=>{let l=document.createElement("div");l.className="lab";l.style.top=(5+y)+"px";l.innerHTML="<small>"+(s+1)+"弦</small>"+SN[s];area.append(l);let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.height=(2+s*.6)+"px";board.append(st);
-for(let f=0;f<=maxF;f++){let m=O[s]+f,c=document.createElement("button"),b=document.createElement("span");c.className="cell "+(mode!=="none"?"show":"");let x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;c.style.left=x0+"px";c.style.top=(y-30)+"px";c.style.width=(x1-x0)+"px";c.style.height="60px";b.className="bubble "+cls(iv(m));b.textContent=txt(m);c.append(b);c.onclick=()=>{play(m);let r=mode==="note"?nn(m):mode==="int"?iv(m):mode==="both"?nn(m)+" / "+iv(m):nn(m)+" / "+iv(m);document.getElementById("big").textContent=r;document.getElementById("sub").textContent=(s+1)+"弦 "+f+"フレット"+(snd?"":"　🔇");c.classList.add("hit");setTimeout(()=>c.classList.remove("hit"),180)};board.append(c)}})
+for(let f=0;f<=maxF;f++){let m=O[s]+f,c=document.createElement("button"),b=document.createElement("span");c.className="cell "+(mode!=="none"?"show":"");let x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;c.style.left=x0+"px";c.style.top=(y-30)+"px";c.style.width=(x1-x0)+"px";c.style.height="60px";b.className="bubble "+cls(iv(m));b.textContent=txt(m);c.append(b);c.onclick=()=>{play(m);let r=mode==="note"?nn(m):mode==="int"?iv(m):mode==="tension"?tv(m):mode==="both"?nn(m)+" / "+iv(m):nn(m)+" / "+iv(m);document.getElementById("big").textContent=r;document.getElementById("sub").textContent=(s+1)+"弦 "+f+"フレット"+(snd?"":"　🔇");c.classList.add("hit");setTimeout(()=>c.classList.remove("hit"),180)};board.append(c)}})
 for(let f=0;f<=maxF;f++){let n=document.createElement("div");n.className="fn";n.style.left=(70+(f===0?12:25+(f-.5)*fw))+"px";n.textContent=f;area.append(n)}
 }
 document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=b.dataset.m;document.querySelectorAll("[data-m]").forEach(x=>x.classList.toggle("on",x===b));draw()});
