@@ -151,7 +151,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.large 
       <div class="field"><label>出題タイプ</label><select id="quizType"><option value="interval">度数</option><option value="tension">テンション</option><option value="note">音名</option></select></div>
       <div class="field"><label>Root</label><select id="quizRoot"><option value="current">練習画面と同じ</option><option value="random">毎回ランダム</option></select></div>
       <div class="field"><label>答え方</label><select id="quizAnswerMode"><option value="one">どこか1か所</option><option value="all">選択した全弦</option></select></div>
-      <button class="primary" id="newQuiz">新しい問題</button>
+      <button class="primary" id="newQuiz">開始 / 次の問題</button>
       <button class="secondary" id="reveal">答えを見る</button>
     </div>
   </div>
@@ -331,8 +331,14 @@ function answerQuiz(c,s,f,m){
   }
 }
 function finishCorrect(){
-  quiz.correct++;quiz.active=false;let sec=(performance.now()-quiz.start)/1000;
-  time.textContent=sec.toFixed(1)+"秒";feedback.textContent="✓ 正解";feedback.className="feedback ok";updateStats();
+  quiz.correct++;
+  quiz.active=false;
+  let sec=(performance.now()-quiz.start)/1000;
+  time.textContent=sec.toFixed(1)+"秒";
+  feedback.textContent="✓ 正解　→ 次の問題";
+  feedback.className="feedback ok";
+  updateStats();
+  setTimeout(()=>{ createQuiz(); },700);
 }
 function updateStats(){
   correct.textContent=quiz.correct;wrong.textContent=quiz.wrong;let total=quiz.correct+quiz.wrong;rate.textContent=total?Math.round(quiz.correct/total*100)+"%":"−";
