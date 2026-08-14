@@ -1,63 +1,359 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes"><title>Guitar Fretboard Trainer</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f3">
+<title>Guitar Fretboard Trainer</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#f5f5f3;color:#222;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic",sans-serif}
-header{background:#fff;border-bottom:1px solid #ddd;padding:10px;display:flex;gap:9px;align-items:end;flex-wrap:wrap;position:sticky;top:0;z-index:20}
-.g label{display:block;font-size:11px;font-weight:700;margin-bottom:4px}select,button{height:42px;border:1px solid #ccc;border-radius:8px;background:#fff;font-size:14px;padding:0 10px}
-.modes{display:flex;flex-wrap:nowrap}.modes button{border-radius:0}.modes button:first-child{border-radius:8px 0 0 8px}.modes button:last-child{border-radius:0 8px 8px 0}.modes button+button{border-left:0}
-button.on{background:#292d32;color:#fff}.scroll{overflow:auto;padding:14px}.area{position:relative;margin:auto}.board{position:absolute;left:70px;top:5px;height:390px;background:#fff;border-right:2px solid #444}
-.nut{position:absolute;left:0;top:0;bottom:0;width:25px;background:#292929;border-radius:8px;z-index:5}.fret{position:absolute;top:0;bottom:0;width:3px;background:#777;z-index:3}
-.string{position:absolute;left:25px;right:0;background:#444;z-index:4}.wound{background:repeating-linear-gradient(90deg,#777 0 3px,#ddd 3px 5px,#777 5px 8px)}
-.lab{position:absolute;left:2px;transform:translateY(-50%);font-weight:700;font-size:17px}.lab small{font-size:12px;margin-right:5px;color:#333}
-.cell{position:absolute;border:0;background:transparent;z-index:9;display:flex;align-items:center;justify-content:center;padding:0}.bubble{min-width:38px;height:38px;padding:0 5px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;opacity:0}.cell.show .bubble,.cell.hit .bubble{opacity:1}.cell.hit .bubble{outline:4px solid #2222}
-.R{background:#7dd4de}.I2{background:#ffd45f}.I3{background:#9bd06d}.I4{background:#6ab6ea}.I5{background:#ff9c9c}.I6{background:#c59ae3}.Ib7{background:#f5a166}.I7{background:#94a8e8}.other{background:#e3e6e8}
-.mark{position:absolute;width:17px;height:17px;border-radius:50%;background:#cfd4d7;z-index:1;transform:translate(-50%,-50%)}.fn{position:absolute;top:402px;transform:translateX(-50%);font-size:12px}
-.result{margin:8px auto 18px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px;text-align:center;max-width:500px}.big{font-size:34px;font-weight:800}.sub{color:#666;margin-top:4px}
-body.ipad .scroll{zoom:1.05}body.iphone .scroll{zoom:.72}body.large .scroll{zoom:1.2}
-</style></head><body>
-<header>
-<div class=g><label>Root</label><select id=root></select></div>
-<div class=g><label>表示モード</label><div class=modes><button data-m=none class=on>非表示</button><button data-m=note>音名 C D…</button><button data-m=int>度数 R 3 5…</button><button data-m=tension>テンション</button><button data-m=both>両方</button></div></div>
-<div class=g><label>音</label><button id=sound>🔇 OFF</button></div>
-<div class=g><label>画面サイズ</label><select id=size><option value=auto>自動</option><option value=ipad>iPad</option><option value=iphone>iPhone</option><option value=large>大きく</option></select></div>
-<div class=g><label>フレット</label><select id=range><option value=24>0–24</option><option value=15>0–15</option><option value=12>0–12</option></select></div>
-</header>
-<div class=scroll><div id=area class=area><div id=board class=board></div></div></div>
-<div class=result><div>タップした音</div><div id=big class=big>−</div><div id=sub class=sub>音OFFでも表示できます</div></div>
-<script>
-const N=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"],I=["R","m2","△2","m3","△3","P4","♭5","P5","m6","△6","m7","△7"],T=["R","♭9","9","♯9","△3","11","♯11","P5","♭13","13","m7","△7"],O=[64,59,55,50,45,40],SN=["E","B","G","D","A","E"];
-let mode="none",snd=false,ctx=null,maxF=24;
-const root=document.getElementById("root"),board=document.getElementById("board"),area=document.getElementById("area");
-N.forEach((x,i)=>root.add(new Option(x,i)));
-function nn(m){return N[m%12]}function iv(m){return I[(m%12-Number(root.value)+12)%12]}function tv(m){return T[(m%12-Number(root.value)+12)%12]}
-function cls(x){return({R:"R","△2":"I2","△3":"I3","P4":"I4","P5":"I5","△6":"I6","m7":"Ib7","△7":"I7"})[x]||"other"}
-function txt(m){return mode==="note"?nn(m):mode==="int"?iv(m):mode==="tension"?tv(m):mode==="both"?nn(m)+" "+iv(m):""}
-async function unlock(){const AC=window.AudioContext||window.webkitAudioContext;if(!ctx)ctx=new AC();if(ctx.state==="suspended")await ctx.resume();let b=ctx.createBuffer(1,1,22050),s=ctx.createBufferSource();s.buffer=b;s.connect(ctx.destination);s.start()}
-async function play(m){if(!snd)return;await unlock();let t=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.type="triangle";o.frequency.value=440*Math.pow(2,(m-69)/12);g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+.8);o.connect(g);g.connect(ctx.destination);o.start();o.stop(t+.82)}
-function draw(){
-document.querySelectorAll(".lab,.fn").forEach(e=>e.remove());board.innerHTML="";
-let W=maxF===24?1400:maxF===15?1000:850, fw=(W-25)/maxF;board.style.width=W+"px";area.style.width=(W+85)+"px";area.style.height="430px";
-let nut=document.createElement("div");nut.className="nut";board.append(nut);
-let ys=[25,92,159,226,293,360];
-for(let f=1;f<=maxF;f++){let d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";board.append(d)}
-[3,5,7,9,15,17,19,21].filter(f=>f<=maxF).forEach(f=>{let d=document.createElement("div");d.className="mark";d.style.left=(25+(f-.5)*fw)+"px";d.style.top="193px";board.append(d)});
-[12,24].filter(f=>f<=maxF).forEach(f=>{
-  [126,260].forEach(y=>{
-    let d=document.createElement("div");
-    d.className="mark";
-    d.style.left=(25+(f-.5)*fw)+"px";
-    d.style.top=y+"px";
-    board.append(d)
-  })
-});
-ys.forEach((y,s)=>{let l=document.createElement("div");l.className="lab";l.style.top=(5+y)+"px";l.innerHTML="<small>"+(s+1)+"弦</small>"+SN[s];area.append(l);let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.height=(2+s*.6)+"px";board.append(st);
-for(let f=0;f<=maxF;f++){let m=O[s]+f,c=document.createElement("button"),b=document.createElement("span");c.className="cell "+(mode!=="none"?"show":"");let x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;c.style.left=x0+"px";c.style.top=(y-30)+"px";c.style.width=(x1-x0)+"px";c.style.height="60px";b.className="bubble "+cls(iv(m));b.textContent=txt(m);c.append(b);c.onclick=()=>{play(m);let r=mode==="note"?nn(m):mode==="int"?iv(m):mode==="tension"?tv(m):mode==="both"?nn(m)+" / "+iv(m):nn(m)+" / "+iv(m);document.getElementById("big").textContent=r;document.getElementById("sub").textContent=(s+1)+"弦 "+f+"フレット"+(snd?"":"　🔇");c.classList.add("hit");setTimeout(()=>c.classList.remove("hit"),180)};board.append(c)}})
-for(let f=0;f<=maxF;f++){let n=document.createElement("div");n.className="fn";n.style.left=(70+(f===0?12:25+(f-.5)*fw))+"px";n.textContent=f;area.append(n)}
+:root{
+  --bg:#f5f5f3;--card:#fff;--ink:#202328;--muted:#737980;--line:#dcdfe2;--dark:#2d3136;
+  --ok:#238636;--ng:#cf222e;--cyan:#7dd4de;--yellow:#ffd45f;--green:#9bd06d;--blue:#6ab6ea;
+  --red:#ff9c9c;--purple:#c59ae3;--orange:#f5a166;--lav:#94a8e8
 }
-document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{mode=b.dataset.m;document.querySelectorAll("[data-m]").forEach(x=>x.classList.toggle("on",x===b));draw()});
-document.getElementById("sound").onclick=async function(){snd=!snd;if(snd){try{await unlock();this.textContent="🔊 ON";this.classList.add("on")}catch(e){snd=false}}else{this.textContent="🔇 OFF";this.classList.remove("on")}};
-document.getElementById("range").onchange=function(){maxF=Number(this.value);draw()};root.onchange=draw;
-function sizing(){document.body.classList.remove("ipad","iphone","large");let v=document.getElementById("size").value;if(v==="auto")v=innerWidth<700?"iphone":"ipad";if(v!=="auto")document.body.classList.add(v)}
-document.getElementById("size").onchange=sizing;addEventListener("resize",()=>{if(document.getElementById("size").value==="auto")sizing()});sizing();draw();
-</script></body></html>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--ink)}
+button,select,input{font:inherit}
+.app{min-height:100vh}
+header{background:#fff;border-bottom:1px solid var(--line);padding:10px 14px;position:sticky;top:0;z-index:40}
+.headrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-size:18px;font-weight:800;margin-right:auto}
+.tabs{display:flex;background:#eee;border-radius:10px;padding:3px}
+.tabs button{border:0;background:transparent;padding:9px 16px;border-radius:8px;font-weight:700}
+.tabs button.active{background:#fff;box-shadow:0 1px 4px #0002}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:end}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:0 0 4px 2px}
+select,.toolbtn{height:40px;border:1px solid #ccd0d4;background:#fff;border-radius:8px;padding:0 10px;color:var(--ink)}
+.toolbtn.active{background:var(--dark);color:#fff}
+.segment{display:flex}
+.segment .toolbtn{border-radius:0}
+.segment .toolbtn:first-child{border-radius:8px 0 0 8px}
+.segment .toolbtn:last-child{border-radius:0 8px 8px 0}
+.segment .toolbtn+.toolbtn{border-left:0}
+main{padding:14px}
+.page{display:none}.page.active{display:block}
+.boardScroll{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.area{position:relative;margin:auto;height:445px}
+.board{position:absolute;left:72px;top:6px;height:382px;background:#fff;border-right:2px solid #444}
+.nut{position:absolute;left:0;top:0;bottom:0;width:25px;background:linear-gradient(90deg,#1e1f21,#555,#1e1f21);border-radius:8px;z-index:6}
+.fret{position:absolute;top:0;bottom:0;width:3px;background:linear-gradient(90deg,#666,#ddd,#666);z-index:3}
+.string{position:absolute;left:25px;right:0;background:#3f4245;z-index:5}
+.wound{background:repeating-linear-gradient(90deg,#777 0 3px,#e2e2e2 3px 5px,#777 5px 8px)}
+.slabel{position:absolute;left:0;transform:translateY(-50%);font-size:17px;font-weight:800}
+.slabel small{font-size:11px;color:#555;margin-right:5px}
+.mark{position:absolute;width:17px;height:17px;border-radius:50%;background:#cdd2d5;transform:translate(-50%,-50%);z-index:1}
+.fnum{position:absolute;top:397px;transform:translateX(-50%);font-size:12px}
+.cell{position:absolute;border:0;background:transparent;z-index:9;display:flex;align-items:center;justify-content:center;padding:0}
+.bubble{min-width:38px;height:38px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;opacity:0;transition:.1s}
+.cell.show .bubble,.cell.hit .bubble,.cell.reveal .bubble{opacity:1}
+.cell.hit .bubble{outline:4px solid #1f232822}
+.cell.correct .bubble{box-shadow:0 0 0 5px #23863655}
+.cell.wrong .bubble{box-shadow:0 0 0 5px #cf222e55}
+.R{background:var(--cyan)}.I2{background:var(--yellow)}.I3{background:var(--green)}.I4{background:var(--blue)}
+.I5{background:var(--red)}.I6{background:var(--purple)}.Ib7{background:var(--orange)}.I7{background:var(--lav)}.other{background:#e5e8ea}
+.cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h3{font-size:15px;margin:0 0 10px}
+.big{font-size:30px;font-weight:850}
+.meta{color:var(--muted);font-size:13px;margin-top:4px}
+.triple{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.pill{background:#f1f2f3;border-radius:9px;padding:9px;text-align:center}
+.pill b{display:block;font-size:18px}
+.quizTop{display:grid;grid-template-columns:1.3fr .9fr;gap:12px;margin-bottom:12px}
+.prompt{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
+.prompt .eyebrow{font-size:12px;color:var(--muted);font-weight:700}
+.prompt .question{font-size:34px;font-weight:900;margin:8px 0 6px}
+.prompt .instruction{font-size:14px;color:#555}
+.score{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stat{text-align:center;background:#f5f6f7;border-radius:10px;padding:10px 5px}
+.stat b{display:block;font-size:21px}.stat span{font-size:11px;color:var(--muted)}
+.feedback{height:28px;margin-top:8px;font-weight:800}
+.ok{color:var(--ok)}.ng{color:var(--ng)}
+.quizControls{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.row{display:flex;gap:9px;align-items:end;flex-wrap:wrap}
+.checkboxGroup{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid #cfd3d7;background:#fff;border-radius:999px;padding:7px 11px;font-size:13px}
+.chip.on{background:#292d32;color:#fff}
+.primary{background:#292d32;color:#fff;border:0;border-radius:9px;padding:10px 18px;font-weight:800}
+.secondary{background:#fff;border:1px solid #ccd0d4;border-radius:9px;padding:9px 14px}
+.settingsGrid{display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:12px}
+.settingCard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+.settingCard h3{margin:0 0 12px}
+.strings{display:flex;gap:7px;flex-wrap:wrap}
+.stringChip{width:64px}
+.help{line-height:1.7;color:#444;font-size:14px}
+body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.large .boardScroll{zoom:1.18}
+@media(max-width:760px){
+  .brand{width:100%}.toolbar{min-width:950px}.tabs button{padding:8px 12px}
+  main{padding:8px}.quizTop{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr 1fr}
+  .settingsGrid{grid-template-columns:1fr}.score{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="headrow">
+    <div class="brand">Guitar Fretboard Trainer</div>
+    <div class="tabs">
+      <button class="tab active" data-page="practice">練習</button>
+      <button class="tab" data-page="quiz">クイズ</button>
+      <button class="tab" data-page="settings">設定</button>
+    </div>
+  </div>
+
+  <div class="toolbar" id="practiceToolbar">
+    <div class="field"><label>Root</label><select id="root"></select></div>
+    <div class="field"><label>表示モード</label>
+      <div class="segment">
+        <button class="toolbtn mode active" data-mode="none">非表示</button>
+        <button class="toolbtn mode" data-mode="note">音名</button>
+        <button class="toolbtn mode" data-mode="interval">度数</button>
+        <button class="toolbtn mode" data-mode="tension">テンション</button>
+        <button class="toolbtn mode" data-mode="both">音名＋度数</button>
+      </div>
+    </div>
+    <div class="field"><label>指定度数だけ表示</label><select id="focus"><option value="">なし</option></select></div>
+    <div class="field"><label>音</label><button id="sound" class="toolbtn">🔇 OFF</button></div>
+    <div class="field"><label>画面サイズ</label><select id="size"><option value="auto">自動</option><option value="ipad">iPad</option><option value="iphone">iPhone</option><option value="large">大きく</option></select></div>
+    <div class="field"><label>フレット</label><select id="range"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
+  </div>
+</header>
+
+<main>
+<section id="practice" class="page active">
+  <div class="boardScroll"><div id="practiceArea" class="area"><div id="practiceBoard" class="board"></div></div></div>
+  <div class="cards">
+    <div class="card">
+      <h3>タップした音</h3>
+      <div id="tapNote" class="big">−</div>
+      <div id="tapPos" class="meta">フレットをタップしてください</div>
+    </div>
+    <div class="card">
+      <h3>答え合わせ</h3>
+      <div class="triple">
+        <div class="pill">音名<b id="ansNote">−</b></div>
+        <div class="pill">度数<b id="ansInt">−</b></div>
+        <div class="pill">テンション<b id="ansTen">−</b></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>おすすめ練習</h3>
+      <div class="help">「非表示」で探す → タップ → 下の答え合わせで確認。<br>「指定度数だけ表示」は全弦の同じ機能音を見るときに便利です。</div>
+    </div>
+  </div>
+</section>
+
+<section id="quiz" class="page">
+  <div class="quizControls">
+    <div class="row">
+      <div class="field"><label>出題タイプ</label><select id="quizType"><option value="interval">度数</option><option value="tension">テンション</option><option value="note">音名</option></select></div>
+      <div class="field"><label>Root</label><select id="quizRoot"><option value="current">練習画面と同じ</option><option value="random">毎回ランダム</option></select></div>
+      <div class="field"><label>答え方</label><select id="quizAnswerMode"><option value="one">どこか1か所</option><option value="all">選択した全弦</option></select></div>
+      <button class="primary" id="newQuiz">新しい問題</button>
+      <button class="secondary" id="reveal">答えを見る</button>
+    </div>
+  </div>
+
+  <div class="quizTop">
+    <div class="prompt">
+      <div class="eyebrow">問題</div>
+      <div class="question" id="question">「新しい問題」を押してください</div>
+      <div class="instruction" id="instruction">正しいフレットをタップ</div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="score">
+      <div class="stat"><b id="correct">0</b><span>正解</span></div>
+      <div class="stat"><b id="wrong">0</b><span>不正解</span></div>
+      <div class="stat"><b id="rate">−</b><span>正答率</span></div>
+      <div class="stat"><b id="time">−</b><span>反応時間</span></div>
+    </div>
+  </div>
+
+  <div class="boardScroll"><div id="quizArea" class="area"><div id="quizBoard" class="board"></div></div></div>
+</section>
+
+<section id="settings" class="page">
+  <div class="settingsGrid">
+    <div class="settingCard">
+      <h3>練習する弦</h3>
+      <div class="strings" id="stringChips"></div>
+      <p class="meta">クイズと指板表示の対象を絞れます。</p>
+    </div>
+    <div class="settingCard">
+      <h3>フレット範囲</h3>
+      <div class="row">
+        <div class="field"><label>開始</label><select id="startFret"></select></div>
+        <div class="field"><label>終了</label><select id="endFret"></select></div>
+      </div>
+      <p class="meta">例：5〜9F、7〜12Fのような狭いポジション練習に使えます。</p>
+    </div>
+    <div class="settingCard">
+      <h3>クイズ出題セット</h3>
+      <div class="field"><label>度数</label><div id="intervalChips" class="checkboxGroup"></div></div>
+      <br>
+      <div class="field"><label>テンション</label><div id="tensionChips" class="checkboxGroup"></div></div>
+    </div>
+    <div class="settingCard">
+      <h3>設計</h3>
+      <div class="help">
+        画面を「練習・クイズ・設定」の3つに分け、普段使う指板画面を混雑させない構成にしています。
+        クイズは指定した弦・フレット範囲だけで出題し、正答率と反応時間をその場で確認できます。
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+const NOTES=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
+const INT=["R","m2","△2","m3","△3","P4","♭5","P5","m6","△6","m7","△7"];
+const TEN=["R","♭9","9","♯9","△3","11","♯11","P5","♭13","13","m7","△7"];
+const OPEN=[64,59,55,50,45,40], STRNOTE=["E","B","G","D","A","E"];
+const Y=[24,89,154,219,284,349];
+let displayMode="none", soundOn=false, audioCtx=null, maxFret=24;
+let enabledStrings=[true,true,true,true,true,true];
+let startF=0,endF=24;
+let quiz={target:null,type:"interval",root:0,start:0,correct:0,wrong:0,doneStrings:new Set(),active:false,revealed:false};
+
+const root=document.getElementById("root");
+NOTES.forEach((n,i)=>root.add(new Option(n,i)));
+const focus=document.getElementById("focus");
+["","R","m2","△2","m3","△3","P4","♭5","P5","m6","△6","m7","△7","♭9","9","♯9","11","♯11","♭13","13"].forEach(v=>focus.add(new Option(v||"なし",v)));
+for(let i=0;i<=24;i++){startFret.add(new Option(i,i));endFret.add(new Option(i,i))}
+endFret.value=24;
+
+function note(m){return NOTES[(m%12+12)%12]}
+function pc(m){return (m%12+12)%12}
+function intervalAt(m,r=Number(root.value)){return INT[(pc(m)-r+12)%12]}
+function tensionAt(m,r=Number(root.value)){return TEN[(pc(m)-r+12)%12]}
+function colorClass(x){return({R:"R","△2":"I2","△3":"I3","P4":"I4","P5":"I5","△6":"I6","m7":"Ib7","△7":"I7","9":"I2","11":"I4","13":"I6"})[x]||"other"}
+function displayText(m){
+  let i=intervalAt(m),t=tensionAt(m);
+  if(displayMode==="note")return note(m);
+  if(displayMode==="interval")return i;
+  if(displayMode==="tension")return t;
+  if(displayMode==="both")return note(m)+" "+i;
+  return "";
+}
+async function unlockAudio(){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!audioCtx)audioCtx=new AC();
+  if(audioCtx.state==="suspended")await audioCtx.resume();
+  const b=audioCtx.createBuffer(1,1,22050),s=audioCtx.createBufferSource();s.buffer=b;s.connect(audioCtx.destination);s.start();
+}
+async function play(m){
+  if(!soundOn)return;
+  try{
+    await unlockAudio();let t=audioCtx.currentTime,f=440*Math.pow(2,(m-69)/12),o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+.75);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(t+.8);
+  }catch(e){}
+}
+function drawBoard(areaId,boardId,isQuiz=false){
+  const area=document.getElementById(areaId),board=document.getElementById(boardId);
+  area.querySelectorAll(".slabel,.fnum").forEach(e=>e.remove());board.innerHTML="";
+  const visibleMax=Math.max(endF,maxFret), W=visibleMax>=24?1400:visibleMax>=15?1000:850,fw=(W-25)/visibleMax;
+  board.style.width=W+"px";area.style.width=(W+84)+"px";
+  let nut=document.createElement("div");nut.className="nut";board.append(nut);
+  for(let f=1;f<=visibleMax;f++){let d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";board.append(d)}
+  [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>marker(board,25+(f-.5)*fw,186));
+  [12,24].filter(f=>f<=visibleMax).forEach(f=>{marker(board,25+(f-.5)*fw,121);marker(board,25+(f-.5)*fw,251)});
+  Y.forEach((y,s)=>{
+    let l=document.createElement("div");l.className="slabel";l.style.top=(6+y)+"px";l.style.opacity=enabledStrings[s]?1:.25;l.innerHTML=`<small>${s+1}弦</small>${STRNOTE[s]}`;area.append(l);
+    let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.height=(2+s*.55)+"px";st.style.opacity=enabledStrings[s]?1:.2;board.append(st);
+    for(let f=0;f<=visibleMax;f++){
+      let m=OPEN[s]+f,c=document.createElement("button"),b=document.createElement("span");
+      c.className="cell"; if(!isQuiz && displayMode!=="none")c.classList.add("show");
+      c.dataset.string=s;c.dataset.fret=f;c.dataset.midi=m;
+      let x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;c.style.left=x0+"px";c.style.top=(y-29)+"px";c.style.width=(x1-x0)+"px";c.style.height="58px";
+      b.className="bubble "+colorClass(isQuiz?intervalAt(m,quiz.root):intervalAt(m));b.textContent=isQuiz?"":displayText(m);
+      if(!enabledStrings[s]||f<startF||f>endF)c.style.pointerEvents="none";
+      if(!enabledStrings[s]||f<startF||f>endF)c.style.opacity=.18;
+      let fv=focus.value;
+      if(!isQuiz && fv){
+        const matches=(intervalAt(m)===fv||tensionAt(m)===fv);
+        c.classList.toggle("show",matches);
+        b.textContent=matches?fv:"";
+      }
+      c.append(b);
+      c.onclick=()=>isQuiz?answerQuiz(c,s,f,m):practiceTap(c,s,f,m);
+      board.append(c);
+    }
+  });
+  for(let f=0;f<=visibleMax;f++){let n=document.createElement("div");n.className="fnum";n.style.left=(72+(f===0?12:25+(f-.5)*fw))+"px";n.textContent=f;area.append(n)}
+}
+function marker(board,x,y){let d=document.createElement("div");d.className="mark";d.style.left=x+"px";d.style.top=y+"px";board.append(d)}
+function practiceTap(c,s,f,m){
+  play(m);c.classList.add("hit");setTimeout(()=>c.classList.remove("hit"),160);
+  document.getElementById("tapNote").textContent=note(m)+" / "+intervalAt(m);
+  document.getElementById("tapPos").textContent=`${s+1}弦 ${f}フレット${soundOn?"":"　🔇"}`;
+  ansNote.textContent=note(m);ansInt.textContent=intervalAt(m);ansTen.textContent=tensionAt(m);
+}
+function newQuiz(){
+  quiz.type=quizType.value;
+  quiz.root=quizRoot.value==="random"?Math.floor(Math.random()*12):Number(root.value);
+  quiz.doneStrings=new Set();quiz.active=true;quiz.revealed=false;quiz.start=performance.now();
+  const pool=quiz.type==="interval"?selectedValues("intervalChips"):quiz.type==="tension"?selectedValues("tensionChips"):NOTES.slice();
+  quiz.target=pool[Math.floor(Math.random()*pool.length)];
+  const rootName=NOTES[quiz.root];
+  question.textContent=quiz.type==="note"?`${quiz.target} を探せ`:`Root ${rootName}：${quiz.target} を探せ`;
+  instruction.textContent=quizAnswerMode.value==="all"?"選択中の全弦で1か所ずつタップ":"正しい場所を1か所タップ";
+  feedback.textContent="";feedback.className="feedback";
+  drawBoard("quizArea","quizBoard",true);
+}
+function isCorrect(m){
+  if(quiz.type==="note")return note(m)===quiz.target;
+  if(quiz.type==="interval")return intervalAt(m,quiz.root)===quiz.target;
+  return tensionAt(m,quiz.root)===quiz.target;
+}
+function answerQuiz(c,s,f,m){
+  if(!quiz.active)return;
+  if(isCorrect(m)){
+    c.classList.add("correct","reveal");c.querySelector(".bubble").textContent=quiz.type==="note"?note(m):quiz.type==="interval"?intervalAt(m,quiz.root):tensionAt(m,quiz.root);
+    if(quizAnswerMode.value==="all"){
+      quiz.doneStrings.add(s);
+      const required=enabledStrings.map((v,i)=>v?i:null).filter(x=>x!==null);
+      if(required.every(x=>quiz.doneStrings.has(x))){finishCorrect()}
+      else {feedback.textContent=`正解　残り ${required.length-quiz.doneStrings.size} 弦`;feedback.className="feedback ok"}
+    }else finishCorrect();
+  }else{
+    quiz.wrong++;updateStats();c.classList.add("wrong");setTimeout(()=>c.classList.remove("wrong"),350);
+    feedback.textContent=`×  ${note(m)} / ${intervalAt(m,quiz.root)} / ${tensionAt(m,quiz.root)}`;feedback.className="feedback ng";
+  }
+}
+function finishCorrect(){
+  quiz.correct++;quiz.active=false;let sec=(performance.now()-quiz.start)/1000;
+  time.textContent=sec.toFixed(1)+"秒";feedback.textContent="✓ 正解";feedback.className="feedback ok";updateStats();
+}
+function updateStats(){
+  correct.textContent=quiz.correct;wrong.textContent=quiz.wrong;let total=quiz.correct+quiz.wrong;rate.textContent=total?Math.round(quiz.correct/total*100)+"%":"−";
+}
+function revealAnswer(){
+  if(!quiz.target)return;
+  quiz.revealed=true;document.querySelectorAll("#quizBoard .cell").forEach(c=>{
+    let m=Number(c.dataset.midi);if(isCorrect(m)){c.classList.add("reveal");c.querySelector(".bubble").textContent=quiz.type==="note"?note(m):quiz.type==="interval"?intervalAt(m,quiz.root):tensionAt(m,quiz.root)}
+  });
+}
+function selectedValues(id){return [...document.querySelectorAll("#"+id+" .chip.on")].map(x=>x.dataset.v)}
+function chips(container,vals){
+  vals.forEach(v=>{let b=document.createElement("button");b.className="chip on";b.dataset.v=v;b.textContent=v;b.onclick=()=>{b.classList.toggle("on");if(!selectedValues(container.id).length)b.classList.add("on")};container.append(b)})
+}
+chips(intervalChips,["R","m3","△3","P4","♭5","P5","m7","△7"]);
+chips(tensionChips,["♭9","9","♯9","11","♯11","♭13","13"]);
+for(let s=0;s<6;s++){let b=document.createElement("button");b.className="chip on stringChip";b.textContent=(s+1)+"弦 "+STRNOTE[s];b.onclick=()=>{enabledStrings[s]=!enabledStrings[s];b.classList.toggle("on",enabledStrings[s]);drawBoard("practiceArea","practiceBoard");if(document.getElementById("quiz").classList.contains("active"))drawBoard("quizArea","quizBoard",true)};stringChips.append(b)}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id===b.dataset.page));practiceToolbar.style.display=b.dataset.page==="practice"?"flex":"none";if(b.dataset.page==="quiz")drawBoard("quizArea","quizBoard",true)});
+document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{displayMode=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.classList.toggle("active",x===b));drawBoard("practiceArea","practiceBoard")});
+sound.onclick=async function(){soundOn=!soundOn;if(soundOn){try{await unlockAudio();this.textContent="🔊 ON";this.classList.add("active")}catch(e){soundOn=false}}else{this.textContent="🔇 OFF";this.classList.remove("active")}};
+root.onchange=()=>{drawBoard("practiceArea","practiceBoard")};focus.onchange=()=>drawBoard("practiceArea","practiceBoard");
+range.onchange=()=>{maxFret=Number(range.value);endF=Math.min(endF,maxFret);endFret.value=endF;drawBoard("practiceArea","practiceBoard")};
+startFret.onchange=()=>{startF=Number(startFret.value);if(startF>endF){endF=startF;endFret.value=endF}drawBoard("practiceArea","practiceBoard")};
+endFret.onchange=()=>{endF=Number(endFret.value);if(endF<startF){startF=endF;startFret.value=startF}maxFret=Math.max(maxFret,endF);drawBoard("practiceArea","practiceBoard")};
+newQuiz.onclick=newQuiz;reveal.onclick=revealAnswer;
+function sizing(){document.body.classList.remove("ipad","iphone","large");let v=size.value;if(v==="auto")v=innerWidth<700?"iphone":"ipad";document.body.classList.add(v)}
+size.onchange=sizing;addEventListener("resize",()=>{if(size.value==="auto")sizing()});sizing();
+drawBoard("practiceArea","practiceBoard");
+</script>
+</body>
+</html>
