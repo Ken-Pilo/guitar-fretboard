@@ -218,6 +218,13 @@ let enabledStrings=[true,true,true,true,true,true];
 let startF=0,endF=24;
 let quiz={target:null,type:"interval",root:0,start:0,correct:0,wrong:0,doneStrings:new Set(),active:false,revealed:false};
 
+const $=id=>document.getElementById(id);
+const sound=$("sound"), range=$("range"), size=$("size"), startFret=$("startFret"), endFret=$("endFret");
+const newQuizBtn=$("newQuiz"), revealBtn=$("reveal"), quizType=$("quizType"), quizRoot=$("quizRoot"), quizAnswerMode=$("quizAnswerMode");
+const question=$("question"), instruction=$("instruction"), feedback=$("feedback");
+const correct=$("correct"), wrong=$("wrong"), rate=$("rate"), time=$("time");
+const practiceToolbar=$("practiceToolbar"), stringChips=$("stringChips"), intervalChips=$("intervalChips"), tensionChips=$("tensionChips");
+const ansNote=$("ansNote"), ansInt=$("ansInt"), ansTen=$("ansTen");
 const root=document.getElementById("root");
 NOTES.forEach((n,i)=>root.add(new Option(n,i)));
 const focus=document.getElementById("focus");
@@ -291,7 +298,7 @@ function practiceTap(c,s,f,m){
   document.getElementById("tapPos").textContent=`${s+1}弦 ${f}フレット${soundOn?"":"　🔇"}`;
   ansNote.textContent=note(m);ansInt.textContent=intervalAt(m);ansTen.textContent=tensionAt(m);
 }
-function newQuiz(){
+function createQuiz(){
   quiz.type=quizType.value;
   quiz.root=quizRoot.value==="random"?Math.floor(Math.random()*12):Number(root.value);
   quiz.doneStrings=new Set();quiz.active=true;quiz.revealed=false;quiz.start=performance.now();
@@ -350,7 +357,7 @@ root.onchange=()=>{drawBoard("practiceArea","practiceBoard")};focus.onchange=()=
 range.onchange=()=>{maxFret=Number(range.value);endF=Math.min(endF,maxFret);endFret.value=endF;drawBoard("practiceArea","practiceBoard")};
 startFret.onchange=()=>{startF=Number(startFret.value);if(startF>endF){endF=startF;endFret.value=endF}drawBoard("practiceArea","practiceBoard")};
 endFret.onchange=()=>{endF=Number(endFret.value);if(endF<startF){startF=endF;startFret.value=startF}maxFret=Math.max(maxFret,endF);drawBoard("practiceArea","practiceBoard")};
-newQuiz.onclick=newQuiz;reveal.onclick=revealAnswer;
+newQuizBtn.onclick=createQuiz;revealBtn.onclick=revealAnswer;
 function sizing(){document.body.classList.remove("ipad","iphone","large");let v=size.value;if(v==="auto")v=innerWidth<700?"iphone":"ipad";document.body.classList.add(v)}
 size.onchange=sizing;addEventListener("resize",()=>{if(size.value==="auto")sizing()});sizing();
 drawBoard("practiceArea","practiceBoard");
