@@ -42,6 +42,15 @@ let nut=document.createElement("div");nut.className="nut";board.append(nut);
 let ys=[25,92,159,226,293,360];
 for(let f=1;f<=maxF;f++){let d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";board.append(d)}
 [3,5,7,9,15,17,19,21].filter(f=>f<=maxF).forEach(f=>{let d=document.createElement("div");d.className="mark";d.style.left=(25+(f-.5)*fw)+"px";d.style.top="193px";board.append(d)});
+[12,24].filter(f=>f<=maxF).forEach(f=>{
+  [126,260].forEach(y=>{
+    let d=document.createElement("div");
+    d.className="mark";
+    d.style.left=(25+(f-.5)*fw)+"px";
+    d.style.top=y+"px";
+    board.append(d)
+  })
+});
 ys.forEach((y,s)=>{let l=document.createElement("div");l.className="lab";l.style.top=(5+y)+"px";l.innerHTML="<small>"+(s+1)+"弦</small>"+SN[s];area.append(l);let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.height=(2+s*.6)+"px";board.append(st);
 for(let f=0;f<=maxF;f++){let m=O[s]+f,c=document.createElement("button"),b=document.createElement("span");c.className="cell "+(mode!=="none"?"show":"");let x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;c.style.left=x0+"px";c.style.top=(y-30)+"px";c.style.width=(x1-x0)+"px";c.style.height="60px";b.className="bubble "+cls(iv(m));b.textContent=txt(m);c.append(b);c.onclick=()=>{play(m);let r=mode==="note"?nn(m):mode==="int"?iv(m):mode==="both"?nn(m)+" / "+iv(m):nn(m)+" / "+iv(m);document.getElementById("big").textContent=r;document.getElementById("sub").textContent=(s+1)+"弦 "+f+"フレット"+(snd?"":"　🔇");c.classList.add("hit");setTimeout(()=>c.classList.remove("hit"),180)};board.append(c)}})
 for(let f=0;f<=maxF;f++){let n=document.createElement("div");n.className="fn";n.style.left=(70+(f===0?12:25+(f-.5)*fw))+"px";n.textContent=f;area.append(n)}
