@@ -111,9 +111,16 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.large 
         <button class="toolbtn mode" data-mode="note">音名</button>
         <button class="toolbtn mode" data-mode="interval">度数</button>
         <button class="toolbtn mode" data-mode="tension">テンション</button>
+        <button class="toolbtn mode" data-mode="chord">コードトーン</button>
         <button class="toolbtn mode" data-mode="both">音名＋度数</button>
       </div>
     </div>
+    <div class="field"><label>コード</label><select id="chordType">
+      <option value="maj">Major</option><option value="min">minor</option>
+      <option value="7">7</option><option value="maj7">M7</option><option value="min7">m7</option>
+      <option value="6">6</option><option value="min6">m6</option>
+      <option value="m7b5">m7♭5</option><option value="dim">dim</option><option value="dim7">dim7</option>
+    </select></div>
     <div class="field"><label>指定度数だけ表示</label><select id="focus"><option value="">なし</option></select></div>
     <div class="field"><label>音</label><button id="sound" class="toolbtn">🔇 OFF</button></div>
     <div class="field"><label>画面サイズ</label><select id="size"><option value="auto">自動</option><option value="ipad">iPad</option><option value="iphone">iPhone</option><option value="large">大きく</option></select></div>
@@ -212,6 +219,10 @@ const NOTES=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
 const INT=["R","m2","△2","m3","△3","P4","♭5","P5","m6","△6","m7","△7"];
 const TEN=["R","♭9","9","♯9","△3","11","♯11","P5","♭13","13","m7","△7"];
 const OPEN=[64,59,55,50,45,40], STRNOTE=["E","B","G","D","A","E"];
+const CHORDS={
+  maj:[0,4,7], min:[0,3,7], "7":[0,4,7,10], maj7:[0,4,7,11], min7:[0,3,7,10],
+  "6":[0,4,7,9], min6:[0,3,7,9], m7b5:[0,3,6,10], dim:[0,3,6], dim7:[0,3,6,9]
+};
 const Y=[24,89,154,219,284,349];
 let displayMode="none", soundOn=false, audioCtx=null, maxFret=24;
 let enabledStrings=[true,true,true,true,true,true];
@@ -228,6 +239,7 @@ const ansNote=$("ansNote"), ansInt=$("ansInt"), ansTen=$("ansTen");
 const root=document.getElementById("root");
 NOTES.forEach((n,i)=>root.add(new Option(n,i)));
 const focus=document.getElementById("focus");
+const chordType=document.getElementById("chordType");
 ["","R","m2","△2","m3","△3","P4","♭5","P5","m6","△6","m7","△7","♭9","9","♯9","11","♯11","♭13","13"].forEach(v=>focus.add(new Option(v||"なし",v)));
 for(let i=0;i<=24;i++){startFret.add(new Option(i,i));endFret.add(new Option(i,i))}
 endFret.value=24;
@@ -243,6 +255,10 @@ function displayText(m){
   if(displayMode==="interval")return i;
   if(displayMode==="tension")return t;
   if(displayMode==="both")return note(m)+" "+i;
+  if(displayMode==="chord"){
+    const rel=(pc(m)-Number(root.value)+12)%12;
+    return CHORDS[chordType.value].includes(rel)?i:"";
+  }
   return "";
 }
 async function unlockAudio(){
@@ -268,11 +284,16 @@ function drawBoard(areaId,boardId,isQuiz=false){
   [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>marker(board,25+(f-.5)*fw,186));
   [12,24].filter(f=>f<=visibleMax).forEach(f=>{marker(board,25+(f-.5)*fw,121);marker(board,25+(f-.5)*fw,251)});
   Y.forEach((y,s)=>{
-    let l=document.createElement("div");l.className="slabel";l.style.top=(6+y)+"px";l.style.opacity=enabledStrings[s]?1:.25;l.innerHTML=`<small>${s+1}弦</small>${STRNOTE[s]}`;area.append(l);
+    let l=document.createElement("div");l.className="slabel";l.style.top=(6+y)+"px";l.style.opacity=enabledStrings[s]?1:.25;l.innerHTML=`<small style="font-size:15px;color:#222">${s+1}弦</small>`;area.append(l);
     let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.height=(2+s*.55)+"px";st.style.opacity=enabledStrings[s]?1:.2;board.append(st);
     for(let f=0;f<=visibleMax;f++){
       let m=OPEN[s]+f,c=document.createElement("button"),b=document.createElement("span");
-      c.className="cell"; if(!isQuiz && displayMode!=="none")c.classList.add("show");
+      c.className="cell";
+      if(!isQuiz && displayMode!=="none" && displayMode!=="chord")c.classList.add("show");
+      if(!isQuiz && displayMode==="chord"){
+        const rel=(pc(m)-Number(root.value)+12)%12;
+        if(CHORDS[chordType.value].includes(rel)) c.classList.add("show");
+      }
       c.dataset.string=s;c.dataset.fret=f;c.dataset.midi=m;
       let x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;c.style.left=x0+"px";c.style.top=(y-29)+"px";c.style.width=(x1-x0)+"px";c.style.height="58px";
       b.className="bubble "+colorClass(isQuiz?intervalAt(m,quiz.root):intervalAt(m));b.textContent=isQuiz?"":displayText(m);
@@ -359,8 +380,15 @@ for(let s=0;s<6;s++){let b=document.createElement("button");b.className="chip on
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id===b.dataset.page));practiceToolbar.style.display=b.dataset.page==="practice"?"flex":"none";if(b.dataset.page==="quiz")drawBoard("quizArea","quizBoard",true)});
 document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{displayMode=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.classList.toggle("active",x===b));drawBoard("practiceArea","practiceBoard")});
 sound.onclick=async function(){soundOn=!soundOn;if(soundOn){try{await unlockAudio();this.textContent="🔊 ON";this.classList.add("active")}catch(e){soundOn=false}}else{this.textContent="🔇 OFF";this.classList.remove("active")}};
-root.onchange=()=>{drawBoard("practiceArea","practiceBoard")};focus.onchange=()=>drawBoard("practiceArea","practiceBoard");
-range.onchange=()=>{maxFret=Number(range.value);endF=Math.min(endF,maxFret);endFret.value=endF;drawBoard("practiceArea","practiceBoard")};
+root.onchange=()=>{drawBoard("practiceArea","practiceBoard")};focus.onchange=()=>drawBoard("practiceArea","practiceBoard");chordType.onchange=()=>drawBoard("practiceArea","practiceBoard");
+range.onchange=()=>{
+  maxFret=Number(range.value);
+  startF=0;
+  endF=maxFret;
+  startFret.value=startF;
+  endFret.value=endF;
+  drawBoard("practiceArea","practiceBoard");
+};
 startFret.onchange=()=>{startF=Number(startFret.value);if(startF>endF){endF=startF;endFret.value=endF}drawBoard("practiceArea","practiceBoard")};
 endFret.onchange=()=>{endF=Number(endFret.value);if(endF<startF){startF=endF;startFret.value=startF}maxFret=Math.max(maxFret,endF);drawBoard("practiceArea","practiceBoard")};
 newQuizBtn.onclick=createQuiz;revealBtn.onclick=revealAnswer;
