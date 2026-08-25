@@ -35,7 +35,7 @@ main{padding:14px}
 .page{display:none}.page.active{display:block}
 .boardScroll{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
 .area{position:relative;margin:auto;height:445px}
-.board{position:absolute;left:72px;top:6px;height:382px;background:#fff;border-right:2px solid #444}
+.board{position:absolute;left:18px;top:6px;height:382px;background:#fff;border-right:2px solid #444}
 .nut{position:absolute;left:0;top:0;bottom:0;width:25px;background:linear-gradient(90deg,#1e1f21,#555,#1e1f21);border-radius:8px;z-index:6}
 .fret{position:absolute;top:0;bottom:0;width:3px;background:linear-gradient(90deg,#666,#ddd,#666);z-index:3}
 .string{position:absolute;left:25px;right:0;background:#3f4245;z-index:5}
@@ -83,7 +83,7 @@ main{padding:14px}
 .strings{display:flex;gap:7px;flex-wrap:wrap}
 .stringChip{width:64px}
 .help{line-height:1.7;color:#444;font-size:14px}
-body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.large .boardScroll{zoom:1.18}
+body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone-small .boardScroll{zoom:.58} body.large .boardScroll{zoom:1.18}
 @media(max-width:760px){
   .brand{width:100%}.toolbar{min-width:950px}.tabs button{padding:8px 12px}
   main{padding:8px}.quizTop{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr 1fr}
@@ -123,7 +123,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.large 
     </select></div>
     <div class="field"><label>指定度数だけ表示</label><select id="focus"><option value="">なし</option></select></div>
     <div class="field"><label>音</label><button id="sound" class="toolbtn">🔇 OFF</button></div>
-    <div class="field"><label>画面サイズ</label><select id="size"><option value="auto">自動</option><option value="ipad">iPad</option><option value="iphone">iPhone</option><option value="large">大きく</option></select></div>
+    <div class="field"><label>画面サイズ</label><select id="size"><option value="auto">自動</option><option value="ipad">iPad</option><option value="iphone">iPhone</option><option value="iphone-small">iPhone 小</option><option value="large">大きく</option></select></div>
     <div class="field"><label>フレット</label><select id="range"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
   </div>
 </header>
@@ -278,13 +278,13 @@ function drawBoard(areaId,boardId,isQuiz=false){
   const area=document.getElementById(areaId),board=document.getElementById(boardId);
   area.querySelectorAll(".slabel,.fnum").forEach(e=>e.remove());board.innerHTML="";
   const visibleMax=Math.max(endF,maxFret), W=visibleMax>=24?1400:visibleMax>=15?1000:850,fw=(W-25)/visibleMax;
-  board.style.width=W+"px";area.style.width=(W+84)+"px";
+  board.style.width=W+"px";area.style.width=(W+30)+"px";
   let nut=document.createElement("div");nut.className="nut";board.append(nut);
   for(let f=1;f<=visibleMax;f++){let d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";board.append(d)}
   [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>marker(board,25+(f-.5)*fw,186));
   [12,24].filter(f=>f<=visibleMax).forEach(f=>{marker(board,25+(f-.5)*fw,121);marker(board,25+(f-.5)*fw,251)});
   Y.forEach((y,s)=>{
-    let l=document.createElement("div");l.className="slabel";l.style.top=(6+y)+"px";l.style.opacity=enabledStrings[s]?1:.25;l.innerHTML=`<small style="font-size:15px;color:#222">${s+1}弦</small>`;area.append(l);
+    
     let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.height=(2+s*.55)+"px";st.style.opacity=enabledStrings[s]?1:.2;board.append(st);
     for(let f=0;f<=visibleMax;f++){
       let m=OPEN[s]+f,c=document.createElement("button"),b=document.createElement("span");
@@ -392,7 +392,7 @@ range.onchange=()=>{
 startFret.onchange=()=>{startF=Number(startFret.value);if(startF>endF){endF=startF;endFret.value=endF}drawBoard("practiceArea","practiceBoard")};
 endFret.onchange=()=>{endF=Number(endFret.value);if(endF<startF){startF=endF;startFret.value=startF}maxFret=Math.max(maxFret,endF);drawBoard("practiceArea","practiceBoard")};
 newQuizBtn.onclick=createQuiz;revealBtn.onclick=revealAnswer;
-function sizing(){document.body.classList.remove("ipad","iphone","large");let v=size.value;if(v==="auto")v=innerWidth<700?"iphone":"ipad";document.body.classList.add(v)}
+function sizing(){document.body.classList.remove("ipad","iphone","iphone-small","large");let v=size.value;if(v==="auto")v=innerWidth<700?"iphone":"ipad";document.body.classList.add(v)}
 size.onchange=sizing;addEventListener("resize",()=>{if(size.value==="auto")sizing()});sizing();
 drawBoard("practiceArea","practiceBoard");
 </script>
