@@ -17,12 +17,12 @@ html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,
 button,select,input{font:inherit}
 .app{min-height:100vh}
 header{background:#fff;border-bottom:1px solid var(--line);padding:10px 14px;position:sticky;top:0;z-index:40}
-.headrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.headrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.head-spacer{flex:1}.top-mini{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
 .brand{font-size:18px;font-weight:800;margin-right:auto}
 .tabs{display:flex;background:#eee;border-radius:10px;padding:3px}
 .tabs button{border:0;background:transparent;padding:9px 16px;border-radius:8px;font-weight:700}
 .tabs button.active{background:#fff;box-shadow:0 1px 4px #0002}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:end}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;align-items:end}
 .field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:0 0 4px 2px}
 select,.toolbtn{height:40px;border:1px solid #ccd0d4;background:#fff;border-radius:8px;padding:0 10px;color:var(--ink)}
 .toolbtn.active{background:var(--dark);color:#fff}
@@ -52,7 +52,7 @@ main{padding:14px}
 .cell.wrong .bubble{box-shadow:0 0 0 5px #cf222e55}
 .R{background:var(--cyan)}.I2{background:var(--yellow)}.I3{background:var(--green)}.I4{background:var(--blue)}
 .I5{background:var(--red)}.I6{background:var(--purple)}.Ib7{background:var(--orange)}.I7{background:var(--lav)}.other{background:#e5e8ea}
-.cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
 .card h3{font-size:15px;margin:0 0 10px}
 .big{font-size:30px;font-weight:850}
@@ -89,7 +89,21 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   main{padding:8px}.quizTop{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr 1fr}
   .settingsGrid{grid-template-columns:1fr}.score{grid-template-columns:repeat(4,1fr)}
 }
-</style>
+
+.chordBtns{display:flex;gap:5px;flex-wrap:wrap;max-width:540px}
+.chordBtn{height:34px;padding:0 10px;border:1px solid #cdd1d5;background:#fff;border-radius:8px;font-weight:700}
+.chordBtn.active{background:#2d3136;color:#fff}
+@media(max-width:760px){
+  header{padding:7px 8px}.brand{font-size:15px;margin-right:0}
+  .tabs button{padding:7px 10px;font-size:13px}.top-mini{margin-left:auto}
+  .top-mini .field{min-width:88px}.top-mini select,.top-mini .toolbtn{height:34px;font-size:12px}
+  .toolbar{min-width:0;gap:5px;flex-wrap:wrap}.field label{font-size:10px}
+  .toolbar select,.toolbar .toolbtn{height:33px;font-size:12px;padding:0 7px}
+  main{padding:6px}.boardScroll{padding:6px}.cards{grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+  .card{padding:8px;min-height:auto}.card h3{font-size:13px;margin-bottom:6px}.big{font-size:23px}.meta{font-size:11px}
+  .triple{gap:4px}.pill{padding:5px}.pill b{font-size:14px}.chordBtns{max-width:100%}
+  .chordBtn{height:30px;padding:0 8px;font-size:11px}
+}</style>
 </head>
 <body>
 <div class="app">
@@ -101,8 +115,12 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
       <button class="tab" data-page="quiz">クイズ</button>
       <button class="tab" data-page="settings">設定</button>
     </div>
+    <div class="head-spacer"></div>
+    <div class="top-mini">
+      
+      
+    </div>
   </div>
-
   <div class="toolbar" id="practiceToolbar">
     <div class="field"><label>Root</label><select id="root"></select></div>
     <div class="field"><label>表示モード</label>
@@ -112,19 +130,23 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
         <button class="toolbtn mode" data-mode="interval">度数</button>
         <button class="toolbtn mode" data-mode="tension">テンション</button>
         <button class="toolbtn mode" data-mode="chord">コードトーン</button>
-        <button class="toolbtn mode" data-mode="both">音名＋度数</button>
+        
       </div>
     </div>
-    <div class="field"><label>コード</label><select id="chordType">
-      <option value="maj">Major</option><option value="min">minor</option>
-      <option value="7">7</option><option value="maj7">M7</option><option value="min7">m7</option>
-      <option value="6">6</option><option value="min6">m6</option>
-      <option value="m7b5">m7♭5</option><option value="dim">dim</option><option value="dim7">dim7</option>
-    </select></div>
     <div class="field"><label>指定度数だけ表示</label><select id="focus"><option value="">なし</option></select></div>
-    <div class="field"><label>音</label><button id="sound" class="toolbtn">🔇 OFF</button></div>
-    <div class="field"><label>画面サイズ</label><select id="size"><option value="auto">自動</option><option value="ipad">iPad</option><option value="iphone">iPhone</option><option value="iphone-small">iPhone 小</option><option value="large">大きく</option></select></div>
     <div class="field"><label>フレット</label><select id="range"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
+    <div class="field"><label>コードトーン</label><div class="chordBtns" id="chordBtns">
+      <button class="chordBtn active" data-chord="maj">M</button><button class="chordBtn" data-chord="min">m</button>
+      <button class="chordBtn" data-chord="7">7</button><button class="chordBtn" data-chord="maj7">M7</button>
+      <button class="chordBtn" data-chord="min7">m7</button><button class="chordBtn" data-chord="6">6</button>
+      <button class="chordBtn" data-chord="min6">m6</button><button class="chordBtn" data-chord="m7b5">m7♭5</button>
+      <button class="chordBtn" data-chord="dim">dim</button><button class="chordBtn" data-chord="dim7">dim7</button>
+    </div></div>
+    
+    
+    
+    
+    
   </div>
 </header>
 
@@ -145,11 +167,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
         <div class="pill">テンション<b id="ansTen">−</b></div>
       </div>
     </div>
-    <div class="card">
-      <h3>おすすめ練習</h3>
-      <div class="help">「非表示」で探す → タップ → 下の答え合わせで確認。<br>「指定度数だけ表示」は全弦の同じ機能音を見るときに便利です。</div>
     </div>
-  </div>
 </section>
 
 <section id="quiz" class="page">
@@ -239,7 +257,7 @@ const ansNote=$("ansNote"), ansInt=$("ansInt"), ansTen=$("ansTen");
 const root=document.getElementById("root");
 NOTES.forEach((n,i)=>root.add(new Option(n,i)));
 const focus=document.getElementById("focus");
-const chordType=document.getElementById("chordType");
+let currentChord="maj";
 ["","R","m2","△2","m3","△3","P4","♭5","P5","m6","△6","m7","△7","♭9","9","♯9","11","♯11","♭13","13"].forEach(v=>focus.add(new Option(v||"なし",v)));
 for(let i=0;i<=24;i++){startFret.add(new Option(i,i));endFret.add(new Option(i,i))}
 endFret.value=24;
@@ -254,10 +272,9 @@ function displayText(m){
   if(displayMode==="note")return note(m);
   if(displayMode==="interval")return i;
   if(displayMode==="tension")return t;
-  if(displayMode==="both")return note(m)+" "+i;
   if(displayMode==="chord"){
     const rel=(pc(m)-Number(root.value)+12)%12;
-    return CHORDS[chordType.value].includes(rel)?i:"";
+    return CHORDS[currentChord].includes(rel)?i:"";
   }
   return "";
 }
@@ -292,7 +309,7 @@ function drawBoard(areaId,boardId,isQuiz=false){
       if(!isQuiz && displayMode!=="none" && displayMode!=="chord")c.classList.add("show");
       if(!isQuiz && displayMode==="chord"){
         const rel=(pc(m)-Number(root.value)+12)%12;
-        if(CHORDS[chordType.value].includes(rel)) c.classList.add("show");
+        if(CHORDS[currentChord].includes(rel)) c.classList.add("show");
       }
       c.dataset.string=s;c.dataset.fret=f;c.dataset.midi=m;
       let x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;c.style.left=x0+"px";c.style.top=(y-29)+"px";c.style.width=(x1-x0)+"px";c.style.height="58px";
@@ -380,7 +397,7 @@ for(let s=0;s<6;s++){let b=document.createElement("button");b.className="chip on
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id===b.dataset.page));practiceToolbar.style.display=b.dataset.page==="practice"?"flex":"none";if(b.dataset.page==="quiz")drawBoard("quizArea","quizBoard",true)});
 document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{displayMode=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.classList.toggle("active",x===b));drawBoard("practiceArea","practiceBoard")});
 sound.onclick=async function(){soundOn=!soundOn;if(soundOn){try{await unlockAudio();this.textContent="🔊 ON";this.classList.add("active")}catch(e){soundOn=false}}else{this.textContent="🔇 OFF";this.classList.remove("active")}};
-root.onchange=()=>{drawBoard("practiceArea","practiceBoard")};focus.onchange=()=>drawBoard("practiceArea","practiceBoard");chordType.onchange=()=>drawBoard("practiceArea","practiceBoard");
+root.onchange=()=>{drawBoard("practiceArea","practiceBoard")};focus.onchange=()=>drawBoard("practiceArea","practiceBoard");
 range.onchange=()=>{
   maxFret=Number(range.value);
   startF=0;
@@ -392,7 +409,18 @@ range.onchange=()=>{
 startFret.onchange=()=>{startF=Number(startFret.value);if(startF>endF){endF=startF;endFret.value=endF}drawBoard("practiceArea","practiceBoard")};
 endFret.onchange=()=>{endF=Number(endFret.value);if(endF<startF){startF=endF;startFret.value=startF}maxFret=Math.max(maxFret,endF);drawBoard("practiceArea","practiceBoard")};
 newQuizBtn.onclick=createQuiz;revealBtn.onclick=revealAnswer;
-function sizing(){document.body.classList.remove("ipad","iphone","iphone-small","large");let v=size.value;if(v==="auto")v=innerWidth<700?"iphone":"ipad";document.body.classList.add(v)}
+
+document.querySelectorAll(".chordBtn").forEach(btn=>{
+  btn.onclick=()=>{
+    currentChord=btn.dataset.chord;
+    document.querySelectorAll(".chordBtn").forEach(b=>b.classList.toggle("active",b===btn));
+    displayMode="chord";
+    document.querySelectorAll(".mode").forEach(b=>b.classList.toggle("active",b.dataset.mode==="chord"));
+    drawBoard("practiceArea","practiceBoard");
+  };
+});
+
+function sizing(){document.body.classList.remove("ipad","iphone","iphone-small","large");let v=size.value;if(v==="auto")v=innerWidth<700?"iphone-small":"ipad";document.body.classList.add(v)}
 size.onchange=sizing;addEventListener("resize",()=>{if(size.value==="auto")sizing()});sizing();
 drawBoard("practiceArea","practiceBoard");
 </script>
