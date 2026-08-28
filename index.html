@@ -36,15 +36,15 @@ main{padding:14px}
 .boardScroll{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
 .area{position:relative;margin:auto;height:445px}
 .board{position:absolute;left:18px;top:6px;height:382px;background:#fff;border-right:2px solid #444}
-.nut{position:absolute;left:0;top:0;bottom:0;width:25px;background:linear-gradient(90deg,#1e1f21,#555,#1e1f21);border-radius:8px;z-index:6}
-.fret{position:absolute;top:0;bottom:0;width:3px;background:linear-gradient(90deg,#666,#ddd,#666);z-index:3}
-.string{position:absolute;left:25px;right:0;background:#3f4245;z-index:5}
+.nut{position:absolute;left:0;top:0;width:25px;background:linear-gradient(90deg,#1e1f21,#555,#1e1f21);border-radius:8px;z-index:6}
+.fret{position:absolute;top:0;width:4px;background:linear-gradient(90deg,#666,#ddd,#666);z-index:14}
+.string{position:absolute;background:#3f4245;z-index:15;min-height:3px}
 .wound{background:repeating-linear-gradient(90deg,#777 0 3px,#e2e2e2 3px 5px,#777 5px 8px)}
 .slabel{position:absolute;left:0;transform:translateY(-50%);font-size:17px;font-weight:800}
 .slabel small{font-size:11px;color:#555;margin-right:5px}
 .mark{position:absolute;width:17px;height:17px;border-radius:50%;background:#cdd2d5;transform:translate(-50%,-50%);z-index:1}
 .fnum{position:absolute;top:397px;transform:translateX(-50%);font-size:12px}
-.cell{position:absolute;border:0;background:transparent;z-index:9;display:flex;align-items:center;justify-content:center;padding:0}
+.cell{position:absolute;border:0;background:transparent;z-index:20;display:flex;align-items:center;justify-content:center;padding:0}
 .bubble{min-width:38px;height:38px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;opacity:0;transition:.1s}
 .cell.show .bubble,.cell.hit .bubble,.cell.reveal .bubble{opacity:1}
 .cell.hit .bubble{outline:4px solid #1f232822}
@@ -103,7 +103,36 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   .card{padding:8px;min-height:auto}.card h3{font-size:13px;margin-bottom:6px}.big{font-size:23px}.meta{font-size:11px}
   .triple{gap:4px}.pill{padding:5px}.pill b{font-size:14px}.chordBtns{max-width:100%}
   .chordBtn{height:30px;padding:0 8px;font-size:11px}
-}</style>
+}
+<style>
+.topControl{display:flex;align-items:center;gap:4px}
+.topControl span{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
+@media(max-width:760px){
+  .headrow{display:flex!important;flex-wrap:nowrap!important;gap:5px!important}
+  .brand{width:auto!important;font-size:11px!important;flex:0 1 auto;min-width:0}
+  .tabs{flex:0 0 auto}
+  .tabs button{padding:6px 7px!important;font-size:11px!important}
+  .head-spacer{display:none}
+  .top-mini{display:flex!important;flex:0 0 auto;margin-left:auto!important;gap:4px!important;flex-wrap:nowrap!important}
+  .topControl{gap:2px}
+  .topControl span{font-size:9px}
+  .top-mini .toolbtn,.top-mini select{height:29px!important;font-size:10px!important;padding:0 4px!important}
+}
+
+.topControl{display:flex;align-items:center;gap:3px}
+.topControl span{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
+@media(max-width:760px){
+  .headrow{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:5px!important}
+  .brand{display:none!important}
+  .tabs{display:flex!important;flex:0 0 auto!important}
+  .tabs button{padding:6px 7px!important;font-size:11px!important}
+  .head-spacer{flex:1!important}
+  .top-mini{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:4px!important;margin-left:auto!important}
+  .topControl{gap:2px!important}
+  .topControl span{font-size:9px!important}
+  .top-mini .toolbtn,.top-mini select{height:29px!important;font-size:10px!important;padding:0 4px!important}
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -117,8 +146,16 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
     </div>
     <div class="head-spacer"></div>
     <div class="top-mini">
-      
-      
+      <div class="topControl"><span>音</span><button id="sound" class="toolbtn" type="button" onclick="toggleSound(this)">🔇</button></div>
+      <div class="topControl"><span>画面サイズ</span>
+        <select id="size" onchange="applySize(this.value)">
+          <option value="auto">自動</option>
+          <option value="ipad">iPad</option>
+          <option value="iphone">iPhone</option>
+          <option value="iphone-small">iPhone 小</option>
+          <option value="large">大きく</option>
+        </select>
+      </div>
     </div>
   </div>
   <div class="toolbar" id="practiceToolbar">
@@ -136,11 +173,11 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
     <div class="field"><label>指定度数だけ表示</label><select id="focus"><option value="">なし</option></select></div>
     <div class="field"><label>フレット</label><select id="range"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
     <div class="field"><label>コードトーン</label><div class="chordBtns" id="chordBtns">
-      <button type="button" class="chordBtn active" data-chord="maj">M</button><button type="button" class="chordBtn" data-chord="min">m</button>
-      <button type="button" class="chordBtn" data-chord="7">7</button><button type="button" class="chordBtn" data-chord="maj7">M7</button>
-      <button type="button" class="chordBtn" data-chord="min7">m7</button><button type="button" class="chordBtn" data-chord="6">6</button>
-      <button type="button" class="chordBtn" data-chord="min6">m6</button><button type="button" class="chordBtn" data-chord="m7b5">m7♭5</button>
-      <button type="button" class="chordBtn" data-chord="dim">dim</button><button type="button" class="chordBtn" data-chord="dim7">dim7</button>
+      <button type="button" class="chordBtn active" data-chord="maj" onclick="selectChord('maj',this)">M</button><button type="button" class="chordBtn" data-chord="min" onclick="selectChord('min',this)">m</button>
+      <button type="button" class="chordBtn" data-chord="7" onclick="selectChord('7',this)">7</button><button type="button" class="chordBtn" data-chord="maj7" onclick="selectChord('maj7',this)">M7</button>
+      <button type="button" class="chordBtn" data-chord="min7" onclick="selectChord('min7',this)">m7</button><button type="button" class="chordBtn" data-chord="6" onclick="selectChord('6',this)">6</button>
+      <button type="button" class="chordBtn" data-chord="min6" onclick="selectChord('min6',this)">m6</button><button type="button" class="chordBtn" data-chord="m7b5" onclick="selectChord('m7b5',this)">m7♭5</button>
+      <button type="button" class="chordBtn" data-chord="dim" onclick="selectChord('dim',this)">dim</button><button type="button" class="chordBtn" data-chord="dim7" onclick="selectChord('dim7',this)">dim7</button>
     </div></div>
     
     
@@ -150,7 +187,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   </div>
 </header>
 
-<main>
+<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v0828-1235</div><main>
 <section id="practice" class="page active">
   <div class="boardScroll"><div id="practiceArea" class="area"><div id="practiceBoard" class="board"></div></div></div>
   <div class="cards">
@@ -243,6 +280,35 @@ const CHORDS={
 };
 const Y=[24,89,154,219,284,349];
 let displayMode="none", soundOn=false, audioCtx=null, maxFret=24;
+function applySize(v){
+  document.body.classList.remove("ipad","iphone","iphone-small","large");
+  if(v==="auto") v=window.innerWidth<700?"iphone-small":"ipad";
+  document.body.classList.add(v);
+}
+async function toggleSound(btn){
+  soundOn=!soundOn;
+  if(soundOn){
+    try{
+      await unlockAudio();
+      btn.textContent="🔊";
+      btn.classList.add("active");
+    }catch(e){
+      soundOn=false;
+      btn.textContent="🔇";
+    }
+  }else{
+    btn.textContent="🔇";
+    btn.classList.remove("active");
+  }
+}
+function selectChord(chord,btn){
+  currentChord=chord;
+  displayMode="chord";
+  document.querySelectorAll(".chordBtn").forEach(b=>b.classList.toggle("active",b===btn));
+  document.querySelectorAll(".mode").forEach(b=>b.classList.toggle("active",b.dataset.mode==="chord"));
+  drawBoard("practiceArea","practiceBoard");
+}
+
 let enabledStrings=[true,true,true,true,true,true];
 let startF=0,endF=24;
 let quiz={target:null,type:"interval",root:0,start:0,correct:0,wrong:0,doneStrings:new Set(),active:false,revealed:false};
@@ -295,14 +361,14 @@ function drawBoard(areaId,boardId,isQuiz=false){
   const area=document.getElementById(areaId),board=document.getElementById(boardId);
   area.querySelectorAll(".slabel,.fnum").forEach(e=>e.remove());board.innerHTML="";
   const visibleMax=Math.max(endF,maxFret), W=visibleMax>=24?1400:visibleMax>=15?1000:850,fw=(W-25)/visibleMax;
-  board.style.width=W+"px";area.style.width=(W+30)+"px";
-  let nut=document.createElement("div");nut.className="nut";board.append(nut);
-  for(let f=1;f<=visibleMax;f++){let d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";board.append(d)}
+  board.style.width=W+"px";board.style.height="382px";area.style.width=(W+30)+"px";area.style.height="395px";
+  let nut=document.createElement("div");nut.className="nut";nut.style.height="382px";board.append(nut);
+  for(let f=1;f<=visibleMax;f++){let d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";d.style.height="382px";board.append(d)}
   [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>marker(board,25+(f-.5)*fw,186));
   [12,24].filter(f=>f<=visibleMax).forEach(f=>{marker(board,25+(f-.5)*fw,121);marker(board,25+(f-.5)*fw,251)});
   Y.forEach((y,s)=>{
     
-    let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.height=(2+s*.55)+"px";st.style.opacity=enabledStrings[s]?1:.2;board.append(st);
+    let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.left="25px";st.style.width=(W-25)+"px";st.style.height=(2+s*.55)+"px";st.style.opacity=enabledStrings[s]?1:.2;board.append(st);
     for(let f=0;f<=visibleMax;f++){
       let m=OPEN[s]+f,c=document.createElement("button"),b=document.createElement("span");
       c.className="cell";
@@ -396,7 +462,7 @@ chips(tensionChips,["♭9","9","♯9","11","♯11","♭13","13"]);
 for(let s=0;s<6;s++){let b=document.createElement("button");b.className="chip on stringChip";b.textContent=(s+1)+"弦 "+STRNOTE[s];b.onclick=()=>{enabledStrings[s]=!enabledStrings[s];b.classList.toggle("on",enabledStrings[s]);drawBoard("practiceArea","practiceBoard");if(document.getElementById("quiz").classList.contains("active"))drawBoard("quizArea","quizBoard",true)};stringChips.append(b)}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id===b.dataset.page));practiceToolbar.style.display=b.dataset.page==="practice"?"flex":"none";if(b.dataset.page==="quiz")drawBoard("quizArea","quizBoard",true)});
 document.querySelectorAll(".mode").forEach(b=>b.onclick=()=>{displayMode=b.dataset.mode;document.querySelectorAll(".mode").forEach(x=>x.classList.toggle("active",x===b));drawBoard("practiceArea","practiceBoard")});
-sound.onclick=async function(){soundOn=!soundOn;if(soundOn){try{await unlockAudio();this.textContent="🔊 ON";this.classList.add("active")}catch(e){soundOn=false}}else{this.textContent="🔇 OFF";this.classList.remove("active")}};
+
 root.onchange=()=>{drawBoard("practiceArea","practiceBoard")};focus.onchange=()=>drawBoard("practiceArea","practiceBoard");
 range.onchange=()=>{
   maxFret=Number(range.value);
@@ -410,28 +476,11 @@ startFret.onchange=()=>{startF=Number(startFret.value);if(startF>endF){endF=star
 endFret.onchange=()=>{endF=Number(endFret.value);if(endF<startF){startF=endF;startFret.value=startF}maxFret=Math.max(maxFret,endF);drawBoard("practiceArea","practiceBoard")};
 newQuizBtn.onclick=createQuiz;revealBtn.onclick=revealAnswer;
 
-document.querySelectorAll(".chordBtn").forEach(btn=>{
-  btn.onclick=()=>{
-    currentChord=btn.dataset.chord;
-    document.querySelectorAll(".chordBtn").forEach(b=>b.classList.toggle("active",b===btn));
-    displayMode="chord";
-    document.querySelectorAll(".mode").forEach(b=>b.classList.toggle("active",b.dataset.mode==="chord"));
-    drawBoard("practiceArea","practiceBoard");
-  };
-});
 
-function sizing(){
-  document.body.classList.remove("ipad","iphone","iphone-small","large");
-  if(!size){ document.body.classList.add(innerWidth<700?"iphone-small":"ipad"); return; }
-  let v=size.value;
-  if(v==="auto")v=innerWidth<700?"iphone-small":"ipad";
-  document.body.classList.add(v);
-}
+
+function sizing(){ applySize(size ? size.value : "auto"); }
 drawBoard("practiceArea","practiceBoard");
-if(size){
-  size.onchange=sizing;
-  addEventListener("resize",()=>{if(size.value==="auto")sizing()});
-}
+addEventListener("resize",()=>{ if(!size || size.value==="auto") sizing(); });
 sizing();
 </script>
 </body>
