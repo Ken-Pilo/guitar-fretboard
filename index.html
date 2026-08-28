@@ -132,6 +132,19 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   .topControl span{font-size:9px!important}
   .top-mini .toolbtn,.top-mini select{height:29px!important;font-size:10px!important;padding:0 4px!important}
 }
+
+/* Compact quiz question area */
+#quizPage .card,#quiz .card{min-height:auto!important}
+.quizTop{gap:7px!important;margin-bottom:7px!important}
+.question,.quizQuestion,#questionBox{min-height:auto!important;padding:9px 12px!important;margin:6px 0!important}
+.question .big,.quizQuestion .big,#questionBox .big{font-size:26px!important;line-height:1.05!important;margin:3px 0!important}
+#quizPage .boardScroll,#quiz .boardScroll{margin-top:6px!important}
+@media(max-width:760px){
+  .quizTop{gap:5px!important}
+  .question,.quizQuestion,#questionBox{padding:6px 8px!important;margin:4px 0!important}
+  .question .big,.quizQuestion .big,#questionBox .big{font-size:22px!important}
+  #quizPage .card,#quiz .card{padding:7px!important}
+}
 </style>
 </head>
 <body>
@@ -187,7 +200,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   </div>
 </header>
 
-<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v0828-1235</div><main>
+<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v0828-quizcompact-dim7</div><main>
 <section id="practice" class="page active">
   <div class="boardScroll"><div id="practiceArea" class="area"><div id="practiceBoard" class="board"></div></div></div>
   <div class="cards">
