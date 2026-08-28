@@ -92,11 +92,11 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
 
 .chordBtns{display:flex;gap:5px;flex-wrap:wrap;max-width:540px}
 .chordBtn{height:34px;padding:0 10px;border:1px solid #cdd1d5;background:#fff;border-radius:8px;font-weight:700}
-.chordBtn.active{background:#2d3136;color:#fff}
+.chordBtn.active{background:#2d3136;color:#fff;box-shadow:0 0 0 2px #2d313622}
 @media(max-width:760px){
-  header{padding:7px 8px}.brand{font-size:15px;margin-right:0}
-  .tabs button{padding:7px 10px;font-size:13px}.top-mini{margin-left:auto}
-  .top-mini .field{min-width:88px}.top-mini select,.top-mini .toolbtn{height:34px;font-size:12px}
+  header{padding:7px 8px}.brand{font-size:14px;margin-right:0;white-space:nowrap}
+  .tabs button{padding:7px 10px;font-size:13px}.top-mini{margin-left:auto;display:flex;gap:5px;align-items:flex-end}
+  .top-mini .field{min-width:auto}.top-mini select,.top-mini .toolbtn{height:32px;font-size:11px;padding:0 6px}
   .toolbar{min-width:0;gap:5px;flex-wrap:wrap}.field label{font-size:10px}
   .toolbar select,.toolbar .toolbtn{height:33px;font-size:12px;padding:0 7px}
   main{padding:6px}.boardScroll{padding:6px}.cards{grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
@@ -136,11 +136,11 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
     <div class="field"><label>指定度数だけ表示</label><select id="focus"><option value="">なし</option></select></div>
     <div class="field"><label>フレット</label><select id="range"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
     <div class="field"><label>コードトーン</label><div class="chordBtns" id="chordBtns">
-      <button class="chordBtn active" data-chord="maj">M</button><button class="chordBtn" data-chord="min">m</button>
-      <button class="chordBtn" data-chord="7">7</button><button class="chordBtn" data-chord="maj7">M7</button>
-      <button class="chordBtn" data-chord="min7">m7</button><button class="chordBtn" data-chord="6">6</button>
-      <button class="chordBtn" data-chord="min6">m6</button><button class="chordBtn" data-chord="m7b5">m7♭5</button>
-      <button class="chordBtn" data-chord="dim">dim</button><button class="chordBtn" data-chord="dim7">dim7</button>
+      <button type="button" class="chordBtn active" data-chord="maj">M</button><button type="button" class="chordBtn" data-chord="min">m</button>
+      <button type="button" class="chordBtn" data-chord="7">7</button><button type="button" class="chordBtn" data-chord="maj7">M7</button>
+      <button type="button" class="chordBtn" data-chord="min7">m7</button><button type="button" class="chordBtn" data-chord="6">6</button>
+      <button type="button" class="chordBtn" data-chord="min6">m6</button><button type="button" class="chordBtn" data-chord="m7b5">m7♭5</button>
+      <button type="button" class="chordBtn" data-chord="dim">dim</button><button type="button" class="chordBtn" data-chord="dim7">dim7</button>
     </div></div>
     
     
@@ -420,9 +420,19 @@ document.querySelectorAll(".chordBtn").forEach(btn=>{
   };
 });
 
-function sizing(){document.body.classList.remove("ipad","iphone","iphone-small","large");let v=size.value;if(v==="auto")v=innerWidth<700?"iphone-small":"ipad";document.body.classList.add(v)}
-size.onchange=sizing;addEventListener("resize",()=>{if(size.value==="auto")sizing()});sizing();
+function sizing(){
+  document.body.classList.remove("ipad","iphone","iphone-small","large");
+  if(!size){ document.body.classList.add(innerWidth<700?"iphone-small":"ipad"); return; }
+  let v=size.value;
+  if(v==="auto")v=innerWidth<700?"iphone-small":"ipad";
+  document.body.classList.add(v);
+}
 drawBoard("practiceArea","practiceBoard");
+if(size){
+  size.onchange=sizing;
+  addEventListener("resize",()=>{if(size.value==="auto")sizing()});
+}
+sizing();
 </script>
 </body>
 </html>
