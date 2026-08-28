@@ -145,6 +145,25 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   .question .big,.quizQuestion .big,#questionBox .big{font-size:22px!important}
   #quizPage .card,#quiz .card{padding:7px!important}
 }
+
+/* QUIZ_COMPACT_1815 */
+.quizTop{display:flex!important;gap:6px!important;margin-bottom:6px!important}
+.prompt{flex:1!important;padding:7px 9px!important;min-height:0!important;text-align:left!important}
+.prompt .eyebrow{display:inline!important;font-size:10px!important;margin-right:5px!important}
+.prompt .question{display:inline!important;font-size:20px!important;line-height:1.1!important;margin:0!important}
+.prompt .instruction{font-size:11px!important;margin-top:3px!important}
+.feedback{height:16px!important;margin-top:2px!important;font-size:11px!important}
+.score{padding:5px!important;gap:4px!important}
+.stat{padding:4px 3px!important}.stat b{font-size:15px!important}.stat span{font-size:9px!important}
+.quizControls{padding:6px!important;margin-bottom:6px!important}
+@media(max-width:760px){
+ .quizTop{display:block!important}
+ .prompt{padding:5px 7px!important;margin-bottom:4px!important}
+ .prompt .question{font-size:18px!important}
+ .prompt .instruction{font-size:10px!important}
+ .score{grid-template-columns:repeat(4,1fr)!important;padding:3px!important}
+ .stat{padding:2px!important}.stat b{font-size:13px!important}
+}
 </style>
 </head>
 <body>
@@ -200,7 +219,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   </div>
 </header>
 
-<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v0828-quizcompact-dim7</div><main>
+<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v0828-1815</div><main>
 <section id="practice" class="page active">
   <div class="boardScroll"><div id="practiceArea" class="area"><div id="practiceBoard" class="board"></div></div></div>
   <div class="cards">
@@ -353,7 +372,9 @@ function displayText(m){
   if(displayMode==="tension")return t;
   if(displayMode==="chord"){
     const rel=(pc(m)-Number(root.value)+12)%12;
-    return CHORDS[currentChord].includes(rel)?i:"";
+    if(!CHORDS[currentChord].includes(rel)) return "";
+    if(currentChord==="dim7" && rel===9) return "♭♭7";
+    return i;
   }
   return "";
 }
