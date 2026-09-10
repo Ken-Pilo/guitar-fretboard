@@ -1,137 +1,26 @@
 <!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Guitar Input Test</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f5f5f3;color:#202328;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}.app{max-width:720px;margin:auto;padding:18px}.card{background:#fff;border:1px solid #dcdfe2;border-radius:16px;padding:18px;margin-bottom:12px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button,select{font:inherit;min-height:44px;border-radius:10px;border:1px solid #ccd0d4;background:#fff;padding:0 14px}button.on{background:#202328;color:#fff}.deviceField{display:flex;flex-direction:column;gap:4px;min-width:240px;flex:1}.deviceField span{font-size:11px;font-weight:700;color:#737980}.deviceField select{width:100%;max-width:100%}.status{font-size:13px;color:#737980;margin-top:8px;line-height:1.5}.detected{text-align:center;padding:28px 10px}.note{font-size:72px;font-weight:900;line-height:1}.degree{font-size:42px;font-weight:850;margin-top:12px}.detail{font-size:14px;color:#737980;margin-top:10px}.meter{height:12px;border-radius:999px;background:#e7e9eb;overflow:hidden;margin-top:16px}.meter>div{height:100%;width:0;background:#202328;transition:width .05s}.levelText{font-size:12px;color:#737980;margin-top:6px}.hint{font-size:13px;line-height:1.6;color:#555}h1{font-size:20px;margin:0 0 12px}.badge{display:inline-block;border-radius:999px;padding:5px 9px;background:#eef0f2;font-size:12px;font-weight:700}.good{color:#238636}.warn{color:#cf222e}.activeInput{font-weight:800;color:#202328}@media(max-width:520px){.app{padding:10px}.note{font-size:60px}.degree{font-size:36px}.deviceField{min-width:100%;width:100%}}
-</style>
-</head>
-<body>
-<div class="app">
- <div class="card">
-  <h1>🎸 ギター入力テスト v2</h1>
-  <div class="row">
-   <button id="inputBtn" type="button">ギター入力 ON</button>
-   <label>Root <select id="root"></select></label>
-   <span id="state" class="badge">OFF</span>
-  </div>
-  <div class="row" style="margin-top:10px">
-   <label class="deviceField"><span>入力デバイス</span><select id="device" disabled><option value="">入力ON後に取得</option></select></label>
-   <button id="refreshBtn" type="button" disabled>再読込</button>
-  </div>
-  <div class="status" id="status">ONを押すとマイク／オーディオ入力の許可を求めます。</div>
-  <div class="status">使用中：<span id="activeInput" class="activeInput">—</span></div>
- </div>
- <div class="card detected">
-   <div class="note" id="note">—</div>
-   <div class="degree" id="degree">—</div>
-   <div class="detail"><span id="freq">— Hz</span> ・ <span id="cents">— cent</span></div>
-   <div class="meter"><div id="level"></div></div>
-   <div class="levelText" id="levelText">入力レベル 0%</div>
- </div>
- <div class="card hint">THR入力向けに検出感度を上げた試験版です。入力レベルのバーが動けばTHRの音声信号は届いています。まず6弦開放E、5弦開放A、4弦開放Dのような単音を1秒程度しっかり鳴らしてください。</div>
-</div>
-<script>
-(()=>{
-'use strict';
-const NOTE_NAMES=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
-const DEG=['R','m2','△2','m3','△3','P4','♭5','P5','m6','△6','m7','△7'];
-const root=document.getElementById('root');
-NOTE_NAMES.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;root.appendChild(o)});root.value='0';
-const btn=document.getElementById('inputBtn'),state=document.getElementById('state'),status=document.getElementById('status');
-const deviceSel=document.getElementById('device'),refreshBtn=document.getElementById('refreshBtn'),activeInput=document.getElementById('activeInput');
-const noteEl=document.getElementById('note'),degreeEl=document.getElementById('degree'),freqEl=document.getElementById('freq'),centsEl=document.getElementById('cents'),levelEl=document.getElementById('level'),levelText=document.getElementById('levelText');
-let ctx=null,analyser=null,stream=null,raf=0,buf=null,lastMidi=null,stable=0,currentDeviceId='';
-
-function detectPitch(data,sr){
-  const n=data.length;
-  let mean=0; for(let i=0;i<n;i++) mean+=data[i]; mean/=n;
-  let rms=0; for(let i=0;i<n;i++){const v=data[i]-mean;rms+=v*v;} rms=Math.sqrt(rms/n);
-  if(rms<0.002) return {freq:-1,rms,confidence:0};
-  const minF=70,maxF=1400;
-  const minLag=Math.max(2,Math.floor(sr/maxF));
-  const maxLag=Math.min(n-2,Math.ceil(sr/minF));
-  let bestLag=-1,bestCorr=-1;
-  for(let lag=minLag;lag<=maxLag;lag++){
-    let xy=0,xx=0,yy=0;
-    const limit=n-lag;
-    for(let i=0;i<limit;i++){
-      const a=data[i]-mean,b=data[i+lag]-mean;
-      xy+=a*b;xx+=a*a;yy+=b*b;
-    }
-    const corr=xy/Math.sqrt((xx*yy)||1);
-    if(corr>bestCorr){bestCorr=corr;bestLag=lag;}
-  }
-  if(bestLag<0 || bestCorr<0.45) return {freq:-1,rms,confidence:bestCorr};
-  let lag=bestLag;
-  function corrAt(L){let xy=0,xx=0,yy=0,limit=n-L;for(let i=0;i<limit;i++){const a=data[i]-mean,b=data[i+L]-mean;xy+=a*b;xx+=a*a;yy+=b*b;}return xy/Math.sqrt((xx*yy)||1)}
-  if(bestLag>minLag && bestLag<maxLag){
-    const c1=corrAt(bestLag-1),c2=bestCorr,c3=corrAt(bestLag+1);
-    const denom=2*(2*c2-c1-c3);
-    if(Math.abs(denom)>1e-9) lag += (c3-c1)/denom;
-  }
-  const freq=sr/lag;
-  return {freq:(freq>=minF&&freq<=maxF)?freq:-1,rms,confidence:bestCorr};
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>Guitar Input Test v3</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#f5f5f3;color:#202328;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}.app{max-width:720px;margin:auto;padding:10px}.card{background:#fff;border:1px solid #dcdfe2;border-radius:16px;padding:18px;margin-bottom:12px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button,select{font:inherit;min-height:44px;border-radius:10px;border:1px solid #ccd0d4;background:#fff;padding:0 14px}button.on{background:#202328;color:#fff}.deviceField{display:flex;flex-direction:column;gap:4px;min-width:100%;flex:1}.deviceField span{font-size:11px;font-weight:700;color:#737980}.deviceField select{width:100%}.status{font-size:13px;color:#737980;margin-top:8px;line-height:1.5}.detected{text-align:center;padding:24px 10px}.note{font-size:68px;font-weight:900;line-height:1}.degree{font-size:40px;font-weight:850;margin-top:10px}.detail{font-size:14px;color:#737980;margin-top:10px}.meter{height:12px;border-radius:999px;background:#e7e9eb;overflow:hidden;margin-top:16px}.meter>div{height:100%;width:0;background:#202328}.diag{margin-top:10px;font-size:12px;line-height:1.7;color:#555}.hint{font-size:13px;line-height:1.6;color:#555}h1{font-size:20px;margin:0 0 12px}.badge{display:inline-block;border-radius:999px;padding:5px 9px;background:#eef0f2;font-size:12px;font-weight:700}.good{color:#238636}.warn{color:#cf222e}.activeInput{font-weight:800;color:#202328}</style></head><body><div class="app">
+<div class="card"><h1>🎸 ギター入力テスト v3</h1><div class="row"><button id="inputBtn">ギター入力 ON</button><label>Root <select id="root"></select></label><span id="state" class="badge">OFF</span></div><div class="row" style="margin-top:10px"><label class="deviceField"><span>入力デバイス</span><select id="device" disabled><option>入力ON後に取得</option></select></label><button id="refreshBtn" disabled>再読込</button></div><div id="status" class="status">ONを押してください。</div><div class="status">使用中：<span id="activeInput" class="activeInput">—</span></div></div>
+<div class="card detected"><div id="note" class="note">—</div><div id="degree" class="degree">—</div><div class="detail"><span id="freq">— Hz</span> ・ <span id="cents">— cent</span></div><div class="meter"><div id="level"></div></div><div id="diag" class="diag">入力レベル 0% ／ 検出待ち</div></div>
+<div class="card hint">v3：THR向けにYIN方式へ変更。まずクリーン音で、6弦開放E → 5弦A → 4弦Dを1本ずつ鳴らしてください。下の診断に「候補 xx.x Hz」が出れば検出器まで信号が届いています。</div></div>
+<script>(()=>{'use strict';
+const N=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'],D=['R','m2','△2','m3','△3','P4','♭5','P5','m6','△6','m7','△7'];
+const $=id=>document.getElementById(id),root=$('root');N.forEach((n,i)=>root.add(new Option(n,i)));root.value=0;
+const btn=$('inputBtn'),state=$('state'),status=$('status'),dev=$('device'),refresh=$('refreshBtn'),active=$('activeInput'),note=$('note'),degree=$('degree'),freq=$('freq'),cents=$('cents'),level=$('level'),diag=$('diag');
+let ctx,analyser,stream,buf,raf=0,current='',hist=[];
+function yin(x,sr){
+ const n=x.length;let mean=0;for(let v of x)mean+=v;mean/=n;let rms=0;const y=new Float32Array(n);for(let i=0;i<n;i++){y[i]=x[i]-mean;rms+=y[i]*y[i]}rms=Math.sqrt(rms/n);if(rms<0.0005)return{f:-1,r:rms,p:0};
+ // Guitar E2..E6-ish: 75-1400 Hz. YIN difference + cumulative mean normalized difference.
+ const minTau=Math.floor(sr/1400),maxTau=Math.min(Math.floor(sr/75),Math.floor(n/2));const diff=new Float32Array(maxTau+1),cmnd=new Float32Array(maxTau+1);cmnd[0]=1;
+ for(let t=1;t<=maxTau;t++){let s=0;for(let i=0;i<n-t;i++){const q=y[i]-y[i+t];s+=q*q}diff[t]=s}
+ let run=0,best=-1,bestVal=1;for(let t=1;t<=maxTau;t++){run+=diff[t];cmnd[t]=run?diff[t]*t/run:1;if(t>=minTau&&cmnd[t]<0.18){while(t+1<=maxTau&&cmnd[t+1]<cmnd[t])t++;best=t;bestVal=cmnd[t];break}if(t>=minTau&&cmnd[t]<bestVal){bestVal=cmnd[t];best=t}}
+ if(best<0||bestVal>0.38)return{f:-1,r:rms,p:1-bestVal};let tau=best;if(best>1&&best<maxTau){const a=cmnd[best-1],b=cmnd[best],c=cmnd[best+1],den=a+c-2*b;if(Math.abs(den)>1e-9)tau=best+(a-c)/(2*den)}const f=sr/tau;return{f:(f>=75&&f<=1400)?f:-1,r:rms,p:1-bestVal};
 }
-
-function render(){
- if(!analyser)return;
- analyser.getFloatTimeDomainData(buf);
- const p=detectPitch(buf,ctx.sampleRate);
- const pct=Math.min(100,Math.max(0,p.rms*1800));
- levelEl.style.width=pct.toFixed(0)+'%';
- levelText.textContent='入力レベル '+pct.toFixed(0)+'%';
- if(p.freq>0){
-   const midi=69+12*Math.log2(p.freq/440),rounded=Math.round(midi);
-   if(rounded===lastMidi)stable++; else {lastMidi=rounded;stable=1;}
-   if(stable>=2){
-     const pc=((rounded%12)+12)%12;
-     noteEl.textContent=NOTE_NAMES[pc];
-     degreeEl.textContent=DEG[(pc-Number(root.value)+12)%12];
-     freqEl.textContent=p.freq.toFixed(1)+' Hz';
-     centsEl.textContent=(100*(midi-rounded)).toFixed(0)+' cent';
-   }
- }
- raf=requestAnimationFrame(render);
-}
-
-async function listDevices(selectId){
- if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return;
- const devices=await navigator.mediaDevices.enumerateDevices();
- const inputs=devices.filter(d=>d.kind==='audioinput');
- deviceSel.innerHTML='';
- if(!inputs.length){const o=document.createElement('option');o.value='';o.textContent='入力デバイスが見つかりません';deviceSel.appendChild(o);deviceSel.disabled=true;refreshBtn.disabled=false;return;}
- inputs.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('オーディオ入力 '+(i+1));deviceSel.appendChild(o)});
- deviceSel.disabled=false;refreshBtn.disabled=false;
- const wanted=selectId||currentDeviceId;
- if(wanted&&inputs.some(d=>d.deviceId===wanted))deviceSel.value=wanted; else deviceSel.selectedIndex=0;
-}
-function constraintsFor(deviceId){const audio={echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1};if(deviceId)audio.deviceId={exact:deviceId};return {audio,video:false}}
-async function openStream(deviceId){
- if(stream)stream.getTracks().forEach(t=>t.stop());
- stream=await navigator.mediaDevices.getUserMedia(constraintsFor(deviceId));
- const track=stream.getAudioTracks()[0];
- const settings=track&&track.getSettings?track.getSettings():{};
- currentDeviceId=settings.deviceId||deviceId||'';
- activeInput.textContent=(track&&track.label)||'オーディオ入力';
- if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
- await ctx.resume();
- const src=ctx.createMediaStreamSource(stream);
- analyser=ctx.createAnalyser(); analyser.fftSize=2048; analyser.smoothingTimeConstant=0;
- buf=new Float32Array(analyser.fftSize); src.connect(analyser);
- cancelAnimationFrame(raf); raf=requestAnimationFrame(render);
- await listDevices(currentDeviceId);
-}
-async function start(){try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('このブラウザでは音声入力を利用できません');status.textContent='入力許可を確認中…';await openStream('');btn.textContent='ギター入力 OFF';btn.classList.add('on');state.textContent='ON';state.className='badge good';status.textContent='入力中：THRで単音を弾いてください。';}catch(e){state.textContent='ERROR';state.className='badge warn';status.textContent='入力を開始できません：'+(e&&e.message?e.message:e)}}
-async function switchDevice(){if(!stream)return;const id=deviceSel.value;try{status.textContent='入力を切替中…';await openStream(id);status.textContent='入力切替完了：単音を弾いてください。'}catch(e){status.textContent='この入力へ切り替えできません：'+(e&&e.message?e.message:e);await listDevices(currentDeviceId)}}
-async function stop(){cancelAnimationFrame(raf);raf=0;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;analyser=null;if(ctx){await ctx.close();ctx=null}btn.textContent='ギター入力 ON';btn.classList.remove('on');state.textContent='OFF';state.className='badge';status.textContent='入力停止';activeInput.textContent='—';levelEl.style.width='0%';levelText.textContent='入力レベル 0%'}
-btn.addEventListener('click',()=>stream?stop():start());
-deviceSel.addEventListener('change',switchDevice);
-refreshBtn.addEventListener('click',async()=>{try{await listDevices(currentDeviceId);status.textContent='入力デバイス一覧を更新しました。'}catch(e){status.textContent='一覧を更新できません：'+(e&&e.message?e.message:e)}});
-if(navigator.mediaDevices&&navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener('devicechange',()=>{if(stream)listDevices(currentDeviceId)});
-})();
-</script>
-</body>
-</html>
+function render(){if(!analyser)return;analyser.getFloatTimeDomainData(buf);const p=yin(buf,ctx.sampleRate),pct=Math.min(100,p.r*2500);level.style.width=pct+'%';diag.textContent='入力レベル '+pct.toFixed(0)+'% ／ '+(p.f>0?'候補 '+p.f.toFixed(1)+' Hz・信頼 '+Math.round(p.p*100)+'%':'検出待ち・信頼 '+Math.round(p.p*100)+'%');if(p.f>0){const m=69+12*Math.log2(p.f/440),mr=Math.round(m);hist.push(mr);if(hist.length>5)hist.shift();const same=hist.filter(v=>v===mr).length;if(same>=2){const pc=(mr%12+12)%12;note.textContent=N[pc];degree.textContent=D[(pc-Number(root.value)+12)%12];freq.textContent=p.f.toFixed(1)+' Hz';cents.textContent=Math.round(100*(m-mr))+' cent'}}raf=requestAnimationFrame(render)}
+async function listDevices(id){const ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');dev.innerHTML='';ds.forEach((d,i)=>dev.add(new Option(d.label||'入力 '+(i+1),d.deviceId)));dev.disabled=!ds.length;refresh.disabled=false;if(id&&ds.some(d=>d.deviceId===id))dev.value=id}
+async function open(id){if(stream)stream.getTracks().forEach(t=>t.stop());const audio={echoCancellation:false,noiseSuppression:false,autoGainControl:false};if(id)audio.deviceId={exact:id};stream=await navigator.mediaDevices.getUserMedia({audio,video:false});const tr=stream.getAudioTracks()[0],set=tr.getSettings?tr.getSettings():{};current=set.deviceId||id||'';active.textContent=tr.label||'オーディオ入力';if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);analyser=ctx.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=0;buf=new Float32Array(analyser.fftSize);src.connect(analyser);cancelAnimationFrame(raf);render();await listDevices(current)}
+async function start(){try{await open('');btn.textContent='ギター入力 OFF';btn.classList.add('on');state.textContent='ON';state.className='badge good';status.textContent='入力中：単音を弾いてください。'}catch(e){state.textContent='ERROR';state.className='badge warn';status.textContent=String(e.message||e)}}
+async function stop(){cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;analyser=null;if(ctx){await ctx.close();ctx=null}btn.textContent='ギター入力 ON';btn.classList.remove('on');state.textContent='OFF';state.className='badge';active.textContent='—'}
+btn.onclick=()=>stream?stop():start();dev.onchange=async()=>{try{await open(dev.value);status.textContent='入力切替完了'}catch(e){status.textContent=String(e.message||e)}};refresh.onclick=()=>listDevices(current);
+})();</script></body></html>
