@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Guitar Input Test</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f5f5f3;color:#202328;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}.app{max-width:720px;margin:auto;padding:18px}.card{background:#fff;border:1px solid #dcdfe2;border-radius:16px;padding:18px;margin-bottom:12px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button,select{font:inherit;min-height:44px;border-radius:10px;border:1px solid #ccd0d4;background:#fff;padding:0 14px}button.on{background:#202328;color:#fff}.status{font-size:13px;color:#737980}.detected{text-align:center;padding:28px 10px}.note{font-size:72px;font-weight:900;line-height:1}.degree{font-size:42px;font-weight:850;margin-top:12px}.detail{font-size:14px;color:#737980;margin-top:10px}.meter{height:10px;border-radius:999px;background:#e7e9eb;overflow:hidden;margin-top:16px}.meter>div{height:100%;width:0;background:#202328;transition:width .08s}.hint{font-size:13px;line-height:1.6;color:#555}h1{font-size:20px;margin:0 0 12px}.badge{display:inline-block;border-radius:999px;padding:5px 9px;background:#eef0f2;font-size:12px;font-weight:700}.good{color:#238636}.warn{color:#cf222e}@media(max-width:520px){.app{padding:10px}.note{font-size:60px}.degree{font-size:36px}}
+*{box-sizing:border-box}body{margin:0;background:#f5f5f3;color:#202328;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}.app{max-width:720px;margin:auto;padding:18px}.card{background:#fff;border:1px solid #dcdfe2;border-radius:16px;padding:18px;margin-bottom:12px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button,select{font:inherit;min-height:44px;border-radius:10px;border:1px solid #ccd0d4;background:#fff;padding:0 14px}button.on{background:#202328;color:#fff}.deviceField{display:flex;flex-direction:column;gap:4px;min-width:240px;flex:1}.deviceField span{font-size:11px;font-weight:700;color:#737980}.deviceField select{width:100%;max-width:100%}.status{font-size:13px;color:#737980;margin-top:8px;line-height:1.5}.detected{text-align:center;padding:28px 10px}.note{font-size:72px;font-weight:900;line-height:1}.degree{font-size:42px;font-weight:850;margin-top:12px}.detail{font-size:14px;color:#737980;margin-top:10px}.meter{height:10px;border-radius:999px;background:#e7e9eb;overflow:hidden;margin-top:16px}.meter>div{height:100%;width:0;background:#202328;transition:width .08s}.hint{font-size:13px;line-height:1.6;color:#555}h1{font-size:20px;margin:0 0 12px}.badge{display:inline-block;border-radius:999px;padding:5px 9px;background:#eef0f2;font-size:12px;font-weight:700}.good{color:#238636}.warn{color:#cf222e}.activeInput{font-weight:800;color:#202328}@media(max-width:520px){.app{padding:10px}.note{font-size:60px}.degree{font-size:36px}.deviceField{min-width:100%;width:100%}}
 </style>
 </head>
 <body>
@@ -17,7 +17,12 @@
    <label>Root <select id="root"></select></label>
    <span id="state" class="badge">OFF</span>
   </div>
+  <div class="row" style="margin-top:10px">
+   <label class="deviceField"><span>入力デバイス</span><select id="device" disabled><option value="">入力ON後に取得</option></select></label>
+   <button id="refreshBtn" type="button" disabled>再読込</button>
+  </div>
   <div class="status" id="status">ONを押すとマイク／オーディオ入力の許可を求めます。</div>
+  <div class="status">使用中：<span id="activeInput" class="activeInput">—</span></div>
  </div>
  <div class="card detected">
    <div class="note" id="note">—</div>
@@ -25,7 +30,7 @@
    <div class="detail"><span id="freq">— Hz</span> ・ <span id="cents">— cent</span></div>
    <div class="meter"><div id="level"></div></div>
  </div>
- <div class="card hint">まず単音認識だけを確認する試験版です。ギターの1音をはっきり鳴らしてください。THR／オーディオインターフェイスから端末へ入力できる場合は、その信号を選ぶと端末マイクより安定しやすくなります。認識が安定したら既存クイズと曲ソロ度数クイズへ接続します。</div>
+ <div class="card hint">入力を一度ONにすると、Safariが認識している「マイク」「THR」「オーディオインターフェイス」などを入力デバイス欄に表示します。THRがiPhoneにUSBオーディオ機器として認識されていれば選択できます。選択を変えると、その入力へ自動で切り替えます。</div>
 </div>
 <script>
 (()=>{
@@ -35,8 +40,9 @@ const DEG=['R','m2','△2','m3','△3','P4','♭5','P5','m6','△6','m7','△7']
 const root=document.getElementById('root');
 NOTE_NAMES.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;root.appendChild(o)});root.value='0';
 const btn=document.getElementById('inputBtn'),state=document.getElementById('state'),status=document.getElementById('status');
+const deviceSel=document.getElementById('device'),refreshBtn=document.getElementById('refreshBtn'),activeInput=document.getElementById('activeInput');
 const noteEl=document.getElementById('note'),degreeEl=document.getElementById('degree'),freqEl=document.getElementById('freq'),centsEl=document.getElementById('cents'),levelEl=document.getElementById('level');
-let ctx=null,analyser=null,stream=null,raf=0,buf=null,lastMidi=null,stable=0;
+let ctx=null,analyser=null,stream=null,raf=0,buf=null,lastMidi=null,stable=0,currentDeviceId='';
 function pitchACF(data,sr){
  let rms=0;for(let i=0;i<data.length;i++)rms+=data[i]*data[i];rms=Math.sqrt(rms/data.length);if(rms<0.012)return {freq:-1,rms};
  let r1=0,r2=data.length-1,th=.18;for(let i=0;i<data.length/2;i++){if(Math.abs(data[i])<th){r1=i;break}}for(let i=1;i<data.length/2;i++){if(Math.abs(data[data.length-i])<th){r2=data.length-i;break}}
@@ -46,9 +52,52 @@ function pitchACF(data,sr){
  const f=sr/T;return {freq:(f>=70&&f<=1400)?f:-1,rms};
 }
 function render(){if(!analyser)return;analyser.getFloatTimeDomainData(buf);const p=pitchACF(buf,ctx.sampleRate);levelEl.style.width=Math.min(100,p.rms*500)+'%';if(p.freq>0){const midi=69+12*Math.log2(p.freq/440),rounded=Math.round(midi);if(rounded===lastMidi)stable++;else{lastMidi=rounded;stable=1}if(stable>=2){const pc=((rounded%12)+12)%12;noteEl.textContent=NOTE_NAMES[pc];degreeEl.textContent=DEG[(pc-Number(root.value)+12)%12];freqEl.textContent=p.freq.toFixed(1)+' Hz';centsEl.textContent=(100*(midi-rounded)).toFixed(0)+' cent';}}raf=requestAnimationFrame(render)}
-async function start(){try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});ctx=new (window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);analyser=ctx.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=0;buf=new Float32Array(analyser.fftSize);src.connect(analyser);btn.textContent='ギター入力 OFF';btn.classList.add('on');state.textContent='ON';state.className='badge good';status.textContent='入力中：単音を弾いてください。';render()}catch(e){state.textContent='ERROR';state.className='badge warn';status.textContent='入力を開始できません：'+(e&&e.message?e.message:e)}}
-async function stop(){cancelAnimationFrame(raf);raf=0;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;analyser=null;if(ctx){await ctx.close();ctx=null}btn.textContent='ギター入力 ON';btn.classList.remove('on');state.textContent='OFF';state.className='badge';status.textContent='入力停止';levelEl.style.width='0%'}
+async function listDevices(selectId){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return;
+ const devices=await navigator.mediaDevices.enumerateDevices();
+ const inputs=devices.filter(d=>d.kind==='audioinput');
+ deviceSel.innerHTML='';
+ if(!inputs.length){const o=document.createElement('option');o.value='';o.textContent='入力デバイスが見つかりません';deviceSel.appendChild(o);deviceSel.disabled=true;refreshBtn.disabled=false;return;}
+ inputs.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('オーディオ入力 '+(i+1));deviceSel.appendChild(o)});
+ deviceSel.disabled=false;refreshBtn.disabled=false;
+ const wanted=selectId||currentDeviceId;
+ if(wanted&&inputs.some(d=>d.deviceId===wanted))deviceSel.value=wanted;
+ else if(currentDeviceId&&inputs.some(d=>d.deviceId===currentDeviceId))deviceSel.value=currentDeviceId;
+ else deviceSel.selectedIndex=0;
+}
+function constraintsFor(deviceId){const audio={echoCancellation:false,noiseSuppression:false,autoGainControl:false};if(deviceId)audio.deviceId={exact:deviceId};return {audio,video:false}}
+async function openStream(deviceId){
+ if(stream)stream.getTracks().forEach(t=>t.stop());
+ stream=await navigator.mediaDevices.getUserMedia(constraintsFor(deviceId));
+ const track=stream.getAudioTracks()[0];
+ const settings=track&&track.getSettings?track.getSettings():{};
+ currentDeviceId=settings.deviceId||deviceId||'';
+ activeInput.textContent=(track&&track.label)||'オーディオ入力';
+ if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
+ await ctx.resume();
+ const src=ctx.createMediaStreamSource(stream);analyser=ctx.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=0;buf=new Float32Array(analyser.fftSize);src.connect(analyser);
+ cancelAnimationFrame(raf);raf=requestAnimationFrame(render);
+ await listDevices(currentDeviceId);
+}
+async function start(){
+ try{
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('このブラウザでは音声入力を利用できません');
+  status.textContent='入力許可を確認中…';
+  await openStream('');
+  btn.textContent='ギター入力 OFF';btn.classList.add('on');state.textContent='ON';state.className='badge good';status.textContent='入力中：使用したい入力デバイスを選べます。';
+ }catch(e){state.textContent='ERROR';state.className='badge warn';status.textContent='入力を開始できません：'+(e&&e.message?e.message:e)}
+}
+async function switchDevice(){
+ if(!stream)return;
+ const id=deviceSel.value;
+ try{status.textContent='入力を切替中…';await openStream(id);status.textContent='入力切替完了：単音を弾いてください。'}
+ catch(e){status.textContent='この入力へ切り替えできません：'+(e&&e.message?e.message:e);await listDevices(currentDeviceId)}
+}
+async function stop(){cancelAnimationFrame(raf);raf=0;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;analyser=null;if(ctx){await ctx.close();ctx=null}btn.textContent='ギター入力 ON';btn.classList.remove('on');state.textContent='OFF';state.className='badge';status.textContent='入力停止';activeInput.textContent='—';levelEl.style.width='0%'}
 btn.addEventListener('click',()=>stream?stop():start());
+deviceSel.addEventListener('change',switchDevice);
+refreshBtn.addEventListener('click',async()=>{try{await listDevices(currentDeviceId);status.textContent='入力デバイス一覧を更新しました。'}catch(e){status.textContent='一覧を更新できません：'+(e&&e.message?e.message:e)}});
+if(navigator.mediaDevices&&navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener('devicechange',()=>{if(stream)listDevices(currentDeviceId)});
 })();
 </script>
 </body>
