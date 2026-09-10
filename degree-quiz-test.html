@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Degree Guitar Quiz</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}.app{max-width:760px;margin:auto;padding:14px}.panel{border:1px solid #2c2c2c;border-radius:16px;padding:16px;margin-bottom:12px;background:#0c0c0c}.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.top h1{font-size:20px;margin:0 auto 0 0}.ctl{min-height:44px;border:1px solid #444;background:#171717;color:#fff;border-radius:10px;padding:0 12px;font:inherit}.ctl.on{background:#fff;color:#000}.field{display:flex;flex-direction:column;gap:4px}.field span{font-size:11px;color:#aaa}.device{width:100%;margin-top:10px}.device select{width:100%}.status{font-size:12px;color:#aaa;margin-top:8px;line-height:1.5}.hero{text-align:center;padding:18px 8px 24px}.label{color:#aaa;font-size:13px}.rootBig{font-size:72px;font-weight:900;line-height:1;margin:8px 0 4px}.rootSub{font-size:15px;color:#aaa}.bars{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}.bar{border:1px solid #333;border-radius:14px;padding:14px;min-height:120px}.barTitle{font-size:12px;color:#888;text-align:left;margin-bottom:12px}.degrees{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap}.deg{font-size:32px;font-weight:800;color:#5f5f5f;min-width:38px;text-align:center;transition:.12s}.deg.current{color:#168bff;transform:scale(1.15)}.deg.done{color:#fff}.deg.wrong{color:#ff4d4d}.detect{margin-top:22px;font-size:15px;color:#aaa}.detect b{color:#fff}.progress{height:8px;background:#222;border-radius:999px;overflow:hidden;margin-top:12px}.progress>div{height:100%;background:#fff;width:0}.editor{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px}.editor input{width:100%;min-height:44px;border:1px solid #444;background:#151515;color:#fff;border-radius:10px;padding:0 12px;font-size:16px}.small{font-size:12px;color:#999;line-height:1.6;margin-top:8px}.doneMsg{font-size:26px;font-weight:900;margin-top:18px;display:none}.doneMsg.show{display:block}.wrongMsg{height:20px;color:#ff6666;font-size:13px;margin-top:7px}.meter{height:7px;background:#222;border-radius:999px;overflow:hidden;margin-top:8px}.meter>div{height:100%;width:0;background:#888}@media(max-width:560px){.app{padding:8px}.panel{padding:12px}.rootBig{font-size:60px}.bars{gap:8px}.bar{padding:10px}.deg{font-size:27px;min-width:32px}.degrees{gap:8px}.editor{grid-template-columns:1fr}.top h1{width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel">
+    <div class="top">
+      <h1>🎸 2小節・度数ギタークイズ</h1>
+      <button id="inputBtn" class="ctl" type="button">ギター入力 ON</button>
+      <label class="field"><span>Root</span><select id="root" class="ctl"></select></label>
+      <button id="resetBtn" class="ctl" type="button">最初から</button>
+    </div>
+    <label class="field device"><span>入力デバイス</span><select id="device" class="ctl" disabled><option>入力ON後に取得</option></select></label>
+    <div class="status">使用中：<b id="activeInput">—</b>　<span id="status">入力OFF</span></div>
+  </div>
+
+  <div class="panel hero">
+    <div class="label">ROOT / KEY</div>
+    <div id="rootBig" class="rootBig">C</div>
+    <div class="rootSub">青＝今弾く音　／　白＝正解済み</div>
+
+    <div class="bars">
+      <div class="bar"><div class="barTitle">1小節目</div><div id="bar1" class="degrees"></div></div>
+      <div class="bar"><div class="barTitle">2小節目</div><div id="bar2" class="degrees"></div></div>
+    </div>
+
+    <div class="detect">検出：<b id="detNote">—</b>　<span id="detFreq">— Hz</span>　<span id="detDegree">—</span></div>
+    <div class="meter"><div id="level"></div></div>
+    <div id="diag" class="small">入力レベル 0% ／ 検出待ち</div>
+    <div id="wrongMsg" class="wrongMsg"></div>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div id="doneMsg" class="doneMsg">2小節クリア ✓</div>
+  </div>
+
+  <div class="panel">
+    <div class="label">テスト用フレーズ（度数）</div>
+    <div class="editor"><input id="seqInput" value="R △2 △3 P5 | △6 P5 △3 R" aria-label="度数列"><button id="applyBtn" class="ctl" type="button">反映</button></div>
+    <div class="small">「|」で2小節に分けます。使用可：R / m2 / △2 / m3 / △3 / P4 / ♭5 / P5 / m6 / △6 / m7 / △7。数字の 1, ♭2, 2, ♭3, 3, 4, ♭5, 5, ♭6, 6, ♭7, 7 でも入力できます。正解音を約0.1秒安定して認識すると次へ進みます。同じ音が連続する場合は一度弾き直してください。</div>
+  </div>
+</div>
+<script>
+(()=>{'use strict';
+const NOTES=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+const DEG_LABEL=['R','m2','△2','m3','△3','P4','♭5','P5','m6','△6','m7','△7'];
+const DEG_MAP={'R':0,'1':0,'m2':1,'♭2':1,'b2':1,'△2':2,'2':2,'m3':3,'♭3':3,'b3':3,'△3':4,'3':4,'P4':5,'4':5,'♭5':6,'b5':6,'P5':7,'5':7,'m6':8,'♭6':8,'b6':8,'△6':9,'6':9,'m7':10,'♭7':10,'b7':10,'△7':11,'7':11};
+const $=id=>document.getElementById(id), root=$('root');NOTES.forEach((n,i)=>root.add(new Option(n,i)));root.value='0';
+const inputBtn=$('inputBtn'),device=$('device'),active=$('activeInput'),status=$('status'),bar1=$('bar1'),bar2=$('bar2'),rootBig=$('rootBig'),detNote=$('detNote'),detFreq=$('detFreq'),detDegree=$('detDegree'),diag=$('diag'),level=$('level'),wrongMsg=$('wrongMsg'),progressBar=$('progressBar'),doneMsg=$('doneMsg'),seqInput=$('seqInput');
+let seq=[],split=0,index=0,ctx=null,analyser=null,stream=null,buf=null,raf=0,currentDevice='',matchFrames=0,armed=true,lastDetected=-1,wrongTimer=0;
+function parseSeq(){const raw=seqInput.value.trim(),parts=raw.split('|');const a=(parts[0]||'').trim().split(/\s+/).filter(Boolean),b=(parts[1]||'').trim().split(/\s+/).filter(Boolean);const all=[...a,...b];if(!all.length||all.some(x=>DEG_MAP[x]===undefined)){status.textContent='度数列に使えない記号があります';return false}seq=all.map(x=>({label:x,semi:DEG_MAP[x]}));split=a.length||Math.ceil(seq.length/2);index=0;matchFrames=0;armed=true;doneMsg.classList.remove('show');wrongMsg.textContent='';renderSequence();return true}
+function renderSequence(){bar1.innerHTML='';bar2.innerHTML='';seq.forEach((x,i)=>{const s=document.createElement('span');s.className='deg'+(i<index?' done':i===index?' current':'');s.textContent=x.label;(i<split?bar1:bar2).appendChild(s)});progressBar.style.width=(seq.length?Math.min(100,index/seq.length*100):0)+'%';if(index>=seq.length){doneMsg.classList.add('show');progressBar.style.width='100%'}}
+function resetQuiz(){index=0;matchFrames=0;armed=true;doneMsg.classList.remove('show');wrongMsg.textContent='';renderSequence()}
+function currentTargetPc(){return index<seq.length?(Number(root.value)+seq[index].semi)%12:null}
+function showWrong(pc){clearTimeout(wrongTimer);wrongMsg.textContent='違う音：'+NOTES[pc]+'（'+DEG_LABEL[(pc-Number(root.value)+12)%12]+'）';wrongTimer=setTimeout(()=>wrongMsg.textContent='',500)}
+function accept(pc){if(index>=seq.length)return;const target=currentTargetPc();if(!armed)return;if(pc===target){matchFrames++;if(matchFrames>=4){index++;matchFrames=0;armed=false;wrongMsg.textContent='';renderSequence()}}else{matchFrames=0;showWrong(pc)}}
+function yin(x,sr){const n=x.length;let mean=0;for(let i=0;i<n;i++)mean+=x[i];mean/=n;let rms=0;const y=new Float32Array(n);for(let i=0;i<n;i++){y[i]=x[i]-mean;rms+=y[i]*y[i]}rms=Math.sqrt(rms/n);if(rms<0.0005)return{f:-1,r:rms,p:0};const minTau=Math.floor(sr/1400),maxTau=Math.min(Math.floor(sr/75),Math.floor(n/2)),diff=new Float32Array(maxTau+1),cmnd=new Float32Array(maxTau+1);cmnd[0]=1;for(let t=1;t<=maxTau;t++){let s=0;for(let i=0;i<n-t;i++){const q=y[i]-y[i+t];s+=q*q}diff[t]=s}let run=0,best=-1,bestVal=1;for(let t=1;t<=maxTau;t++){run+=diff[t];cmnd[t]=run?diff[t]*t/run:1;if(t>=minTau&&cmnd[t]<.18){while(t+1<=maxTau&&cmnd[t+1]<cmnd[t])t++;best=t;bestVal=cmnd[t];break}if(t>=minTau&&cmnd[t]<bestVal){best=t;bestVal=cmnd[t]}}if(best<0||bestVal>.38)return{f:-1,r:rms,p:1-bestVal};let tau=best;if(best>1&&best<maxTau){const a=cmnd[best-1],b=cmnd[best],c=cmnd[best+1],den=a+c-2*b;if(Math.abs(den)>1e-9)tau=best+(a-c)/(2*den)}const f=sr/tau;return{f:(f>=75&&f<=1400)?f:-1,r:rms,p:1-bestVal}}
+function renderAudio(){if(!analyser)return;analyser.getFloatTimeDomainData(buf);const p=yin(buf,ctx.sampleRate),pct=Math.min(100,p.r*2500);level.style.width=pct+'%';if(p.r<0.0012){armed=true;lastDetected=-1;matchFrames=0}if(p.f>0){const midi=69+12*Math.log2(p.f/440),mr=Math.round(midi),pc=(mr%12+12)%12,cents=Math.round(100*(midi-mr));detNote.textContent=NOTES[pc];detFreq.textContent=p.f.toFixed(1)+' Hz';detDegree.textContent=DEG_LABEL[(pc-Number(root.value)+12)%12];diag.textContent='入力レベル '+pct.toFixed(0)+'% ／ 信頼 '+Math.round(p.p*100)+'% ／ '+cents+' cent';if(!armed&&lastDetected!==-1&&pc!==lastDetected)armed=true;lastDetected=pc;if(p.p>.55&&Math.abs(cents)<48)accept(pc)}else{diag.textContent='入力レベル '+pct.toFixed(0)+'% ／ 検出待ち'}raf=requestAnimationFrame(renderAudio)}
+async function listDevices(id){const ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');device.innerHTML='';ds.forEach((d,i)=>device.add(new Option(d.label||'入力 '+(i+1),d.deviceId)));device.disabled=!ds.length;if(id&&ds.some(d=>d.deviceId===id))device.value=id}
+async function openStream(id){if(stream)stream.getTracks().forEach(t=>t.stop());const audio={echoCancellation:false,noiseSuppression:false,autoGainControl:false};if(id)audio.deviceId={exact:id};stream=await navigator.mediaDevices.getUserMedia({audio,video:false});const tr=stream.getAudioTracks()[0],settings=tr.getSettings?tr.getSettings():{};currentDevice=settings.deviceId||id||'';active.textContent=tr.label||'オーディオ入力';if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);analyser=ctx.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=0;buf=new Float32Array(analyser.fftSize);src.connect(analyser);cancelAnimationFrame(raf);renderAudio();await listDevices(currentDevice)}
+async function start(){try{status.textContent='入力許可を確認中…';await openStream('');inputBtn.textContent='ギター入力 OFF';inputBtn.classList.add('on');status.textContent='単音を順番に弾いてください'}catch(e){status.textContent='入力開始エラー：'+String(e.message||e)}}
+async function stop(){cancelAnimationFrame(raf);raf=0;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;analyser=null;if(ctx){await ctx.close();ctx=null}inputBtn.textContent='ギター入力 ON';inputBtn.classList.remove('on');active.textContent='—';status.textContent='入力OFF'}
+inputBtn.addEventListener('click',()=>stream?stop():start());device.addEventListener('change',async()=>{try{await openStream(device.value);status.textContent='入力切替完了'}catch(e){status.textContent='切替エラー：'+String(e.message||e)}});root.addEventListener('change',()=>{rootBig.textContent=NOTES[Number(root.value)];resetQuiz()});$('resetBtn').addEventListener('click',resetQuiz);$('applyBtn').addEventListener('click',parseSeq);parseSeq();
+})();</script>
+</body></html>
