@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Guitar Input Test</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f5f3;color:#202328;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}.app{max-width:720px;margin:auto;padding:18px}.card{background:#fff;border:1px solid #dcdfe2;border-radius:16px;padding:18px;margin-bottom:12px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}button,select{font:inherit;min-height:44px;border-radius:10px;border:1px solid #ccd0d4;background:#fff;padding:0 14px}button.on{background:#202328;color:#fff}.status{font-size:13px;color:#737980}.detected{text-align:center;padding:28px 10px}.note{font-size:72px;font-weight:900;line-height:1}.degree{font-size:42px;font-weight:850;margin-top:12px}.detail{font-size:14px;color:#737980;margin-top:10px}.meter{height:10px;border-radius:999px;background:#e7e9eb;overflow:hidden;margin-top:16px}.meter>div{height:100%;width:0;background:#202328;transition:width .08s}.hint{font-size:13px;line-height:1.6;color:#555}h1{font-size:20px;margin:0 0 12px}.badge{display:inline-block;border-radius:999px;padding:5px 9px;background:#eef0f2;font-size:12px;font-weight:700}.good{color:#238636}.warn{color:#cf222e}@media(max-width:520px){.app{padding:10px}.note{font-size:60px}.degree{font-size:36px}}
+</style>
+</head>
+<body>
+<div class="app">
+ <div class="card">
+  <h1>🎸 ギター入力テスト</h1>
+  <div class="row">
+   <button id="inputBtn" type="button">ギター入力 ON</button>
+   <label>Root <select id="root"></select></label>
+   <span id="state" class="badge">OFF</span>
+  </div>
+  <div class="status" id="status">ONを押すとマイク／オーディオ入力の許可を求めます。</div>
+ </div>
+ <div class="card detected">
+   <div class="note" id="note">—</div>
+   <div class="degree" id="degree">—</div>
+   <div class="detail"><span id="freq">— Hz</span> ・ <span id="cents">— cent</span></div>
+   <div class="meter"><div id="level"></div></div>
+ </div>
+ <div class="card hint">まず単音認識だけを確認する試験版です。ギターの1音をはっきり鳴らしてください。THR／オーディオインターフェイスから端末へ入力できる場合は、その信号を選ぶと端末マイクより安定しやすくなります。認識が安定したら既存クイズと曲ソロ度数クイズへ接続します。</div>
+</div>
+<script>
+(()=>{
+'use strict';
+const NOTE_NAMES=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+const DEG=['R','m2','△2','m3','△3','P4','♭5','P5','m6','△6','m7','△7'];
+const root=document.getElementById('root');
+NOTE_NAMES.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;root.appendChild(o)});root.value='0';
+const btn=document.getElementById('inputBtn'),state=document.getElementById('state'),status=document.getElementById('status');
+const noteEl=document.getElementById('note'),degreeEl=document.getElementById('degree'),freqEl=document.getElementById('freq'),centsEl=document.getElementById('cents'),levelEl=document.getElementById('level');
+let ctx=null,analyser=null,stream=null,raf=0,buf=null,lastMidi=null,stable=0;
+function pitchACF(data,sr){
+ let rms=0;for(let i=0;i<data.length;i++)rms+=data[i]*data[i];rms=Math.sqrt(rms/data.length);if(rms<0.012)return {freq:-1,rms};
+ let r1=0,r2=data.length-1,th=.18;for(let i=0;i<data.length/2;i++){if(Math.abs(data[i])<th){r1=i;break}}for(let i=1;i<data.length/2;i++){if(Math.abs(data[data.length-i])<th){r2=data.length-i;break}}
+ const x=data.slice(r1,r2),n=x.length,c=new Float32Array(n);for(let lag=0;lag<n;lag++){let s=0;for(let i=0;i<n-lag;i++)s+=x[i]*x[i+lag];c[lag]=s}
+ let d=0;while(d+1<n&&c[d]>c[d+1])d++;let max=-1,pos=-1;for(let i=d;i<n;i++){if(c[i]>max){max=c[i];pos=i}}if(pos<=0)return {freq:-1,rms};
+ let T=pos;if(pos>0&&pos<n-1){const x1=c[pos-1],x2=c[pos],x3=c[pos+1],a=(x1+x3-2*x2)/2,b=(x3-x1)/2;if(a)T-=b/(2*a)}
+ const f=sr/T;return {freq:(f>=70&&f<=1400)?f:-1,rms};
+}
+function render(){if(!analyser)return;analyser.getFloatTimeDomainData(buf);const p=pitchACF(buf,ctx.sampleRate);levelEl.style.width=Math.min(100,p.rms*500)+'%';if(p.freq>0){const midi=69+12*Math.log2(p.freq/440),rounded=Math.round(midi);if(rounded===lastMidi)stable++;else{lastMidi=rounded;stable=1}if(stable>=2){const pc=((rounded%12)+12)%12;noteEl.textContent=NOTE_NAMES[pc];degreeEl.textContent=DEG[(pc-Number(root.value)+12)%12];freqEl.textContent=p.freq.toFixed(1)+' Hz';centsEl.textContent=(100*(midi-rounded)).toFixed(0)+' cent';}}raf=requestAnimationFrame(render)}
+async function start(){try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});ctx=new (window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);analyser=ctx.createAnalyser();analyser.fftSize=4096;analyser.smoothingTimeConstant=0;buf=new Float32Array(analyser.fftSize);src.connect(analyser);btn.textContent='ギター入力 OFF';btn.classList.add('on');state.textContent='ON';state.className='badge good';status.textContent='入力中：単音を弾いてください。';render()}catch(e){state.textContent='ERROR';state.className='badge warn';status.textContent='入力を開始できません：'+(e&&e.message?e.message:e)}}
+async function stop(){cancelAnimationFrame(raf);raf=0;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;analyser=null;if(ctx){await ctx.close();ctx=null}btn.textContent='ギター入力 ON';btn.classList.remove('on');state.textContent='OFF';state.className='badge';status.textContent='入力停止';levelEl.style.width='0%'}
+btn.addEventListener('click',()=>stream?stop():start());
+})();
+</script>
+</body>
+</html>
