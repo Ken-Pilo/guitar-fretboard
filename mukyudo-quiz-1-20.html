@@ -10,96 +10,31 @@
 body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif}
 .app{max-width:820px;margin:auto;padding:9px}
 .p{background:#0d0d0d;border:1px solid #333;border-radius:15px;padding:12px;margin-bottom:9px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.btn,select{background:#181818;color:#fff;border:1px solid #444;border-radius:9px;min-height:42px;padding:8px;font:inherit}
-.btn{font-weight:750}
-.song{font-size:20px;font-weight:900}
-.small{font-size:12px;color:#aaa}
-.key{text-align:center;font-size:46px;font-weight:900;line-height:1}
-.trackSel{min-width:125px}
-.bars{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.bar{border:1px solid #333;border-radius:12px;padding:10px;min-height:134px}
-.chord{text-align:center;font-size:25px;font-weight:900;margin:4px}
-.sub{text-align:center;font-size:11px;color:#999}
-.degs{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:12px}
-.d{font-size:25px;font-weight:850;color:#555;min-width:32px;text-align:center}
-.d.now{color:#168bff;transform:scale(1.15)}
-.d.ok{color:#fff}
-.kind{font-size:10px;display:block;color:#888;margin-top:2px}
-.d.now .kind{color:#65b7ff}.d.ok .kind{color:#ccc}
-.detect{text-align:center;margin-top:14px;font-size:16px}
-.meter,.prog{height:8px;background:#222;border-radius:9px;overflow:hidden;margin-top:9px}
-.meter div{height:100%;background:#888}.prog div{height:100%;background:#fff}
-.nav{display:flex;gap:6px;margin-top:10px}.nav button{flex:1}
-.rule{line-height:1.6;font-size:13px;color:#bbb}
-.badge{display:inline-block;border:1px solid #444;border-radius:999px;padding:3px 7px;margin:2px;font-size:11px}
-@media(max-width:560px){.d{font-size:22px}.key{font-size:40px}.bar{padding:8px}.song{font-size:17px}}
-</style>
-</head>
-<body>
-<div class="app">
-  <div class="p">
-    <div class="row">
-      <div class="song">無窮動 Track 01–20</div>
-      <select id="track" class="trackSel"></select>
-      <button id="ib" class="btn" style="margin-left:auto">ギター入力 ON</button>
-    </div>
-    <div class="small" style="margin-top:6px">入力デバイス</div>
-    <select id="dev" style="width:100%;margin-top:4px" disabled><option>入力ON後に取得</option></select>
-    <div class="small" style="margin-top:6px">入力：<b id="active">—</b> ／ <span id="st">入力OFF</span></div>
-  </div>
-
-  <div class="p">
-    <div id="pg" class="small" style="text-align:center"></div>
-    <div id="key" class="key">C</div>
-    <div class="small" style="text-align:center;margin-top:5px">各小節のコードRoot基準。コードトーンは 2/4/6 ではなくコード内の度数、非コードトーンは 9/11/13 系で表示。</div>
-
-    <div class="bars">
-      <div class="bar"><div id="bt1" class="small"></div><div id="c1" class="chord">—</div><div id="b1" class="degs"></div></div>
-      <div class="bar"><div id="bt2" class="small"></div><div id="c2" class="chord">—</div><div id="b2" class="degs"></div></div>
-    </div>
-
-    <div class="detect">検出：<b id="note">—</b>　Chord:<b id="cd">—</b></div>
-    <div class="meter"><div id="lev" style="width:0"></div></div>
-    <div id="diag" class="small" style="text-align:center;margin-top:6px">入力待ち</div>
-    <div class="prog"><div id="pr" style="width:0"></div></div>
-    <div class="nav"><button id="prev" class="btn">← 前</button><button id="retry" class="btn">やり直し</button><button id="next" class="btn">次 →</button></div>
-  </div>
-
-  <div class="p rule">
-    <b>表記ルール v1</b><br>
-    <span class="badge">コードトーン：R / m3 / △3 / ♭5 / P5 / m7 / △7</span>
-    <span class="badge">テンション：♭9 / 9 / ♯9 / 11 / ♯11 / ♭13 / 13</span><br>
-    例：コードRootから全音上の音は、単純な「△2」ではなくテンションとして <b>9</b> と表示します。
-  </div>
-</div>
-
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn,select{background:#181818;color:#fff;border:1px solid #444;border-radius:9px;min-height:42px;padding:8px;font:inherit}.btn{font-weight:750}.song{font-size:20px;font-weight:900}.small{font-size:12px;color:#aaa}.key{text-align:center;font-size:46px;font-weight:900;line-height:1}.trackSel{min-width:125px}.bars{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.bar{border:1px solid #333;border-radius:12px;padding:10px;min-height:134px}.chord{text-align:center;font-size:25px;font-weight:900;margin:4px}.degs{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:12px}.d{font-size:25px;font-weight:850;color:#555;min-width:32px;text-align:center}.d.now{color:#168bff;transform:scale(1.15)}.d.ok{color:#fff}.kind{font-size:10px;display:block;color:#888;margin-top:2px}.d.now .kind{color:#65b7ff}.d.ok .kind{color:#ccc}.detect{text-align:center;margin-top:14px;font-size:16px}.meter{height:8px;background:#222;border-radius:9px;overflow:hidden;margin-top:9px}.meter div{height:100%;background:#888}.nav{display:flex;gap:6px;margin-top:10px}.nav button{flex:1}.rule{line-height:1.6;font-size:13px;color:#bbb}.badge{display:inline-block;border:1px solid #444;border-radius:999px;padding:3px 7px;margin:2px;font-size:11px}@media(max-width:560px){.d{font-size:22px}.key{font-size:40px}.bar{padding:8px}.song{font-size:17px}}
+</style></head><body><div class="app">
+<div class="p"><div class="row"><div class="song">無窮動 Track 01–20 <span class="small">v0912-CH</span></div><select id="track" class="trackSel"></select><button id="ib" class="btn" style="margin-left:auto">ギター入力 ON</button></div><div class="small" style="margin-top:6px">入力デバイス</div><select id="dev" style="width:100%;margin-top:4px" disabled><option>入力ON後に取得</option></select><div class="small" style="margin-top:6px">入力：<b id="active">—</b> ／ <span id="st">入力OFF</span></div><div class="small" style="margin-top:6px">THR入力チャンネル</div><select id="ch" style="width:100%;margin-top:4px" disabled><option value="0">CH1</option><option value="1">CH2</option></select><div id="chdiag" class="small" style="margin-top:6px">チャンネル：未確認</div></div>
+<div class="p"><div id="pg" class="small" style="text-align:center"></div><div id="key" class="key">C</div><div class="small" style="text-align:center;margin-top:5px">各小節のコードRoot基準。コードトーンは 2/4/6 ではなくコード内の度数、非コードトーンは 9/11/13 系で表示。</div><div class="bars"><div class="bar"><div id="bt1" class="small"></div><div id="c1" class="chord">—</div><div id="b1" class="degs"></div></div><div class="bar"><div id="bt2" class="small"></div><div id="c2" class="chord">—</div><div id="b2" class="degs"></div></div></div><div class="detect">検出：<b id="note">—</b>　Chord:<b id="cd">—</b></div><div class="meter"><div id="lev" style="width:0"></div></div><div id="diag" class="small" style="text-align:center;margin-top:6px">入力待ち</div><div class="nav"><button id="prev" class="btn">← 前</button><button id="retry" class="btn">やり直し</button><button id="next" class="btn">次 →</button></div></div>
+<div class="p rule"><b>表記ルール v1</b><br><span class="badge">コードトーン：R / m3 / △3 / ♭5 / P5 / m7 / △7</span><span class="badge">テンション：♭9 / 9 / ♯9 / 11 / ♯11 / ♭13 / 13</span></div></div>
 <script>
 (()=>{'use strict';
 const DATA={"1":{"key":"C","chords":["CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7"],"bars":[[11,0,11,9],[7,4,1,10],[9,0,4,2],[3,11,10,8],[7,5,4,2],[1,4,7,10],[9,5,2,0],[11,2,5,8],[7,11,2,0],[1,4,7,10],[9,5,4,2],[7,6,5,7],[4,7,11,2],[1,10,9,7],[5,7,9,0],[11,2,7,5],[4,7,0,4],[3,10,7,10],[9,5,4,2],[7,5,1,11],[0,4,7,0],[10,6,1,10],[9,0,4,7],[8,2,5,8],[11]]},"2":{"key":"C","chords":["CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7","A7","Dm7","G7","CMaj7"],"bars":[[2,11,7,4],[3,6,10,1],[0,9,5,2],[1,4,8,11],[0,11,7,5],[4,2,1,4],[2,4,5,7],[8,6,7,5],[4,5,6,9],[7,5,3,1],[2,9,0,9],[11,9,8,6],[7,5,4,2],[1,3,4,7],[5,9,1,4],[2,5,8,6],[7,11,2,0],[1,10,9,7],[5,9,0,10],[11,8,7,5],[4,7,11,9],[10,7,5,3],[2,5,9,0],[1,7,10,1],[2]]},"3":{"key":"G","chords":["GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7"],"bars":[[7,11,2,6],[5,2,11,8],[9,0,4,7],[6,3,2,0],[11,2,6,9],[8,5,4,2],[0,4,7,11],[10,6,5,3],[2,7,11,2],[0,8,7,5],[4,7,11,2],[0,8,0,3],[2,1,0,2],[11,9,8,11],[9,8,7,9],[6,4,3,1],[2,0,11,9],[8,11,2,5],[4,0,11,9],[8,6,5,3],[2,7,11,2],[5,8,11,8],[9,7,6,4],[2,0,10,8],[7]]},"4":{"key":"G","chords":["GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7","E7","Am7","D7","GMaj7"],"bars":[[2,6,7,11],[10,2,5,3],[4,0,4,7],[6,9,0,10],[11,0,11,9],[8,5,4,2],[0,3,2,0],[11,9,8,6],[7,9,11,2],[10,0,2,5],[3,5,7,10],[8,6,5,3],[2,4,2,0],[11,9,8,11],[9,11,0,2],[3,6,10,1],[2,11,7,9],[10,8,7,5],[4,9,0,4],[3,8,0,3],[2,11,7,2],[5,10,2,5],[4,2,0,10],[8,6,5,3],[2]]},"5":{"key":"D","chords":["DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7"],"bars":[[1,2,1,11],[9,7,5,3],[4,6,7,10],[9,7,6,4],[2,6,4,2],[3,7,2,0],[11,2,1,11],[10,8,9,7],[6,9,1,4],[3,6,9,0],[11,2,7,11],[10,7,5,3],[2,4,6,9],[5,7,9,0],[10,0,1,10],[0,10,9,7],[6,7,8,11],[9,5,7,3],[6,2,1,4],[3,1,0,10],[9,11,1,4],[3,0,11,9],[7,9,11,2],[1,9,1,4],[1]]},"6":{"key":"D","chords":["DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7","B7","Em7","A7","DMaj7"],"bars":[[2,1,4,1],[2,0,11,9],[7,11,10,8],[9,7,6,4],[2,4,6,9],[5,4,3,5],[2,10,0,2],[1,11,10,8],[9,6,4,2],[3,6,9,0],[11,2,6,9],[7,10,1,4],[2,6,4,2],[0,9,5,9],[7,9,10,7],[9,7,5,1],[4,2,1,4],[3,5,7,9],[11,2,1,11],[10,8,9,7],[6,9,1,11],[0,5,9,0],[11,4,7,11],[10,0,4,1],[2]]},"7":{"key":"A","chords":["AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7"],"bars":[[4,1,11,9],[10,7,6,4],[2,11,10,8],[7,5,4,2],[1,4,6,8],[10,1,4,7],[6,1,11,9],[8,4,2,0],[1,4,9,1],[0,10,7,4],[6,2,1,11],[10,5,4,2],[1,9,8,6],[4,2,0,10],[11,2,6,9],[8,11,7,5],[4,2,1,11],[10,2,0,10],[9,6,2,11],[10,7,5,3],[4,3,2,4],[1,10,6,4],[2,4,6,9],[8,11,2,5],[4]]},"8":{"key":"A","chords":["AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7","F♯7","Bm7","E7","AMaj7"],"bars":[[4,9,1,4],[2,7,10,2],[1,6,9,1],[0,5,8,0],[11,4,8,11],[10,4,7,10],[9,2,6,9],[8,2,5,8],[9,8,11,9],[10,7,6,4],[2,6,1,11],[4,3,2,0],[1,4,11,9],[10,6,1,4],[2,6,11,9],[8,5,4,2],[3,6,5,3],[4,7,10,1],[11,1,2,4],[5,3,4,2],[3,6,5,3],[4,2,1,10],[11,10,9,11],[8,6,5,3],[4]]}};
 const N=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'],D=['R','m2','△2','m3','△3','P4','♭5','P5','m6','△6','m7','△7'];
-const chordTones={maj7:[0,4,7,11],min7:[0,3,7,10],dom7:[0,4,7,10]};
-const $=id=>document.getElementById(id),tr=$('track'),dev=$('dev'),ib=$('ib'),active=$('active'),st=$('st');
-Object.keys(DATA).forEach(k=>tr.add(new Option('Track '+String(k).padStart(2,'0'),k)));
-let track=1,page=0,seq=[],split=0,idx=0,ctx,an,buf,stream,raf=0,hist=[],sil=0,armed=true,lastAcceptedPc=null;
-function rootPc(s){let m=(s||'').match(/^([A-G])([#♯b♭]?)/),p={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m?.[1]||'C'];if(m?.[2]==='#'||m?.[2]==='♯')p++;if(m?.[2]==='b'||m?.[2]==='♭')p--;return(p+12)%12}
-function kindFor(ch){if(/Maj7/.test(ch))return'maj7';if(/^.[#♯b♭]?m7/.test(ch))return'min7';return'dom7'}
-function label(pc,ch){let r=rootPc(ch),rel=(pc-r+12)%12,tones=chordTones[kindFor(ch)];if(tones.includes(rel))return D[rel];return ['R','♭9','9','♯9','△3','11','♯11','P5','♭13','13','m7','△7'][rel]}
-function current(){return DATA[String(track)]}
-function load(){let d=current(),a=d.bars[page*2]||[],b=d.bars[page*2+1]||[];seq=[...a.map(pc=>({pc,ch:d.chords[page*2]})),...b.map(pc=>({pc,ch:d.chords[page*2+1]}))];split=a.length;idx=0;hist=[];armed=true;lastAcceptedPc=null;key.textContent=d.key;pg.textContent=(page*2+1)+'–'+Math.min(page*2+2,d.bars.length)+'小節';bt1.textContent=(page*2+1)+'小節目';bt2.textContent=(page*2+2)+'小節目';c1.textContent=d.chords[page*2]||'—';c2.textContent=d.chords[page*2+1]||'—';draw()}
-function draw(){b1.innerHTML='';b2.innerHTML='';seq.forEach((x,i)=>{let s=document.createElement('span');s.className='d'+(i<idx?' ok':i===idx?' now':'');s.textContent=label(x.pc,x.ch);(i<split?b1:b2).appendChild(s)});pr.style.width=(seq.length?idx/seq.length*100:0)+'%';if(seq.length&&idx>=seq.length&&(page+1)*2<current().bars.length){page++;load();return}prev.disabled=page===0;next.disabled=(page+1)*2>=current().bars.length}
-function prep(x){let n=x.length,m=0;for(let v of x)m+=v;m/=n;let y=new Float32Array(n),r=0;for(let i=0;i<n;i++){y[i]=x[i]-m;r+=y[i]*y[i]}return{y,r:Math.sqrt(r/n)}}
-function nsdf(y,t){let ac=0,m=0,lim=y.length-t;for(let i=0;i<lim;i++){let a=y[i],b=y[i+t];ac+=a*b;m+=a*a+b*b}return m?2*ac/m:0}
-function mpm(y,sr,weak){let min=Math.max(2,Math.floor(sr/700)),max=Math.min(Math.floor(sr/70),Math.floor(y.length/2)),vals=new Float32Array(max+1),maxv=-1;for(let t=min;t<=max;t++){let v=nsdf(y,t);vals[t]=v;if(v>maxv)maxv=v}let floor=weak?.34:.45;if(maxv<floor)return null;let cutoff=Math.max(weak?.50:.62,maxv*(weak?.80:.86)),peaks=[];for(let t=min+1;t<max;t++)if(vals[t]>vals[t-1]&&vals[t]>=vals[t+1]&&vals[t]>=cutoff)peaks.push(t);if(!peaks.length)return null;let t=peaks[0],a=vals[t-1],b=vals[t],c=vals[t+1],den=a-2*b+c,sh=den?0.5*(a-c)/den:0,lag=t+Math.max(-.5,Math.min(.5,sh)),f=sr/lag;if(f<70||f>700)return null;return{f,clar:b}}
-function info(f){let mf=69+12*Math.log2(f/440),m=Math.round(mf),c=100*(mf-m);return{pc:(m%12+12)%12,n:N[(m%12+12)%12],oct:Math.floor(m/12)-1,c}}
-function med(a){let z=[...a].sort((a,b)=>a-b);return z[Math.floor(z.length/2)]}
-function loop(){if(!an)return;an.getFloatTimeDomainData(buf);let q=prep(buf),weak=q.r<.00050,short=q.r>=.00025;lev.style.width=Math.min(100,q.r/.0012*100)+'%';if(q.r<.00010){sil++;if(sil>4){hist=[];armed=true;lastAcceptedPc=null}raf=requestAnimationFrame(loop);return}sil=0;let y=short?q.y.subarray(q.y.length-4096):q.y,p=mpm(y,ctx.sampleRate,weak);if(!p||p.clar<(weak?.40:.58)){diag.textContent='不安定・無視';raf=requestAnimationFrame(loop);return}let i=info(p.f);note.textContent=i.n+i.oct;let cur=seq[idx]||seq[Math.max(0,seq.length-1)];cd.textContent=cur?label(i.pc,cur.ch):'—';diag.textContent=`${p.f.toFixed(2)} Hz ／ ${i.c>=0?'+':''}${Math.round(i.c)} cent ／ clarity ${p.clar.toFixed(2)} ／ ${short?'4096':'8192'}`;hist.push({pc:i.pc,f:p.f,c:i.c});if(hist.length>5)hist.shift();if(!armed){if(i.pc!==lastAcceptedPc){armed=true;hist=[]}else{raf=requestAnimationFrame(loop);return}}if(idx<seq.length){let same=hist.filter(x=>x.pc===i.pc),need=weak?2:3;if(same.length>=need){let use=same.slice(-need),cspread=Math.max(...use.map(x=>x.c))-Math.min(...use.map(x=>x.c));if(cspread<=30&&Math.abs(med(use.map(x=>x.c)))<=40){if(i.pc===seq[idx].pc){lastAcceptedPc=i.pc;armed=false;idx++;hist=[];draw()}}}}raf=requestAnimationFrame(loop)}
+const $=id=>document.getElementById(id),tr=$('track'),dev=$('dev'),ch=$('ch'),chdiag=$('chdiag'),ib=$('ib'),active=$('active'),st=$('st'),key=$('key'),pg=$('pg'),c1=$('c1'),c2=$('c2'),b1=$('b1'),b2=$('b2'),bt1=$('bt1'),bt2=$('bt2'),note=$('note'),cd=$('cd'),lev=$('lev'),diag=$('diag'),prev=$('prev'),retry=$('retry'),next=$('next');
+for(let i=1;i<=8;i++)tr.add(new Option('Track '+String(i).padStart(2,'0'),i));let track=1,page=0,seq=[],idx=0;
+function rootPc(c){let m=c.match(/^([A-G])([♯#♭b]?)/);if(!m)return 0;let base={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]],a=m[2];return(base+(a==='♯'||a==='#'?1:a==='♭'||a==='b'?-1:0)+12)%12}
+function label(pc,c){let d=(pc-rootPc(c)+12)%12,maj=/Maj7/.test(c),min=/m7/.test(c)&&!/Maj/.test(c);let chord=new Set(min?[0,3,7,10]:maj?[0,4,7,11]:[0,4,7,10]);if(chord.has(d))return D[d];return['R','♭9','9','♯9','△3','11','♯11','P5','♭13','13','m7','△7'][d]}
+function current(){return DATA[track]||DATA[1]}
+function load(){let d=current();key.textContent=d.key;pg.textContent=`${page*2+1}–${Math.min(page*2+2,d.bars.length)}小節`;seq=[];idx=0;[0,1].forEach((x)=>{let bi=page*2+x,bar=d.bars[bi]||[],chord=d.chords[bi]||'',box=x?b2:b1,ce=x?c2:c1,be=x?bt2:bt1;ce.textContent=chord;be.textContent=(bi+1)+'小節目';box.innerHTML='';bar.forEach(pc=>{seq.push({pc,chord});let e=document.createElement('span');e.className='d';e.innerHTML=label(pc,chord);box.appendChild(e)})});draw()}
+function draw(){let els=[...b1.children,...b2.children];els.forEach((e,i)=>e.className='d'+(i<idx?' ok':i===idx?' now':''));if(idx>=seq.length)diag.textContent='完了'}
+let stream=null,ctx=null,an=null,buf=null,raf=0,hist=[],lastAcceptedPc=null,armed=true,srcNode=null,splitter=null,channelCount=1;
+function med(a){let b=[...a].sort((x,y)=>x-y);return b[Math.floor(b.length/2)]}
+function mpm(x,sr){let n=x.length,maxLag=Math.min(Math.floor(sr/70),n-2),minLag=Math.max(2,Math.floor(sr/1000)),nsdf=new Float32Array(maxLag+1);for(let t=minLag;t<=maxLag;t++){let ac=0,m=0;for(let i=0;i<n-t;i++){let a=x[i],b=x[i+t];ac+=a*b;m+=a*a+b*b}nsdf[t]=m?2*ac/m:0}let peaks=[];for(let t=minLag+1;t<maxLag;t++)if(nsdf[t]>nsdf[t-1]&&nsdf[t]>=nsdf[t+1]&&nsdf[t]>.55)peaks.push(t);if(!peaks.length)return null;let best=peaks.reduce((a,b)=>nsdf[b]>nsdf[a]?b:a);return{f:sr/best,cl:nsdf[best]}}
+function loop(){if(!an)return;an.getFloatTimeDomainData(buf);let rms=Math.sqrt(buf.reduce((a,v)=>a+v*v,0)/buf.length);lev.style.width=Math.min(100,rms*4000)+'%';if(rms>.00025){let n=rms>=.00025?4096:8192,x=buf.slice(buf.length-n),r=mpm(x,ctx.sampleRate);if(r){let midi=69+12*Math.log2(r.f/440),mi=Math.round(midi),pc=(mi%12+12)%12,c=(midi-mi)*100;note.textContent=N[pc]+Math.floor(mi/12-1);cd.textContent=idx<seq.length?label(pc,seq[idx].chord):'—';diag.textContent=`${r.f.toFixed(1)}Hz / ${c>=0?'+':''}${c.toFixed(0)}c / MPM ${r.cl.toFixed(2)}`;hist.push({pc,c});if(hist.length>6)hist.shift();if(idx<seq.length&&hist.filter(x=>x.pc===pc).length>=3&&Math.abs(c)<=40&&pc===seq[idx].pc){idx++;hist=[];draw()}}}raf=requestAnimationFrame(loop)}
 async function listInputs(selectedId){let ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');dev.innerHTML='';ds.forEach((d,i)=>dev.add(new Option(d.label||('入力 '+(i+1)),d.deviceId)));dev.disabled=!ds.length;if(selectedId&&ds.some(d=>d.deviceId===selectedId))dev.value=selectedId}
-async function openInput(deviceId=''){if(stream)stream.getTracks().forEach(t=>t.stop());let audio={echoCancellation:false,noiseSuppression:false,autoGainControl:false};if(deviceId)audio.deviceId={exact:deviceId};stream=await navigator.mediaDevices.getUserMedia({audio});let at=stream.getAudioTracks()[0],set=at.getSettings?at.getSettings():{};active.textContent=at.label||'入力';if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();let src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=8192;buf=new Float32Array(an.fftSize);src.connect(an);cancelAnimationFrame(raf);loop();await listInputs(set.deviceId||deviceId||'')}
-ib.onclick=async()=>{if(stream){cancelAnimationFrame(raf);stream.getTracks().forEach(t=>t.stop());stream=null;an=null;if(ctx){await ctx.close();ctx=null}ib.textContent='ギター入力 ON';st.textContent='入力OFF';active.textContent='—';dev.disabled=true}else try{await openInput('');ib.textContent='ギター入力 OFF';st.textContent='入力中'}catch(e){st.textContent='入力エラー '+e.message}};
-dev.onchange=async()=>{try{await openInput(dev.value);ib.textContent='ギター入力 OFF';st.textContent='入力中'}catch(e){st.textContent='入力エラー '+e.message}};
-tr.onchange=()=>{track=Number(tr.value);page=0;load()};retry.onclick=load;prev.onclick=()=>{if(page){page--;load()}};next.onclick=()=>{if((page+1)*2<current().bars.length){page++;load()}};tr.value='1';load();
-})();
-</script>
-</body>
-</html>
+async function openInput(deviceId=''){const requested=deviceId,inputs=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput'),before=inputs.find(d=>d.deviceId===requested);if(stream)stream.getTracks().forEach(t=>t.stop());let audio={echoCancellation:false,noiseSuppression:false,autoGainControl:false};if(requested)audio.deviceId={exact:requested};const newStream=await navigator.mediaDevices.getUserMedia({audio});const at=newStream.getAudioTracks()[0],set=at.getSettings?at.getSettings():{},actualId=set.deviceId||'',requestedLabel=before?.label||'',actualLabel=at.label||'';if(requested&&actualId&&actualId!==requested){newStream.getTracks().forEach(t=>t.stop());throw new Error('選択した入力と実際の入力が一致しません')}stream=newStream;active.textContent=actualLabel||requestedLabel||'入力';st.textContent='入力中・選択確認済み';if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();srcNode=ctx.createMediaStreamSource(stream);channelCount=Number(set.channelCount||srcNode.channelCount||1);ch.disabled=channelCount<2;if(channelCount<2)ch.value='0';chdiag.textContent='実入力: '+active.textContent+' / '+channelCount+'ch / 使用CH'+(Number(ch.value)+1);an=ctx.createAnalyser();an.fftSize=8192;buf=new Float32Array(an.fftSize);if(channelCount>=2){splitter=ctx.createChannelSplitter(channelCount);srcNode.connect(splitter);splitter.connect(an,Number(ch.value),0)}else{splitter=null;srcNode.connect(an)}cancelAnimationFrame(raf);loop();await listInputs(actualId||requested||'')}
+async function startPreferredInput(){const p=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});p.getTracks().forEach(t=>t.stop());const inputs=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');await listInputs('');const thr=inputs.find(d=>/THR/i.test(d.label));if(thr){dev.value=thr.deviceId;await openInput(thr.deviceId);return}st.textContent='THRが見つかりません';active.textContent='—'}
+ib.onclick=async()=>{if(stream){cancelAnimationFrame(raf);stream.getTracks().forEach(t=>t.stop());stream=null;an=null;if(ctx){await ctx.close();ctx=null}ib.textContent='ギター入力 ON';st.textContent='入力OFF';active.textContent='—';dev.disabled=true;ch.disabled=true}else try{await startPreferredInput();if(stream)ib.textContent='ギター入力 OFF'}catch(e){st.textContent='入力エラー '+e.message}};
+dev.onchange=async()=>{try{await openInput(dev.value);ib.textContent='ギター入力 OFF'}catch(e){st.textContent='入力エラー '+e.message}};
+ch.onchange=()=>{if(!srcNode||!an)return;try{if(splitter)splitter.disconnect(an)}catch(e){}try{srcNode.disconnect(an)}catch(e){}if(channelCount>=2&&splitter)splitter.connect(an,Number(ch.value),0);else srcNode.connect(an);hist=[];armed=true;chdiag.textContent='実入力: '+active.textContent+' / '+channelCount+'ch / 使用CH'+(Number(ch.value)+1)};
+tr.onchange=()=>{track=Number(tr.value);page=0;load()};retry.onclick=load;prev.onclick=()=>{if(page){page--;load()}};next.onclick=()=>{if((page+1)*2<current().bars.length){page++;load()}};tr.value='1';load();})();
+</script></body></html>
