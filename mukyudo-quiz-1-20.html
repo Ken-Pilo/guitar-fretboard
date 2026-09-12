@@ -115,8 +115,7 @@ function contextualLabel(pc,chord){
 }
 function noteName(pc){return N[(pc+12)%12]}
 
-let track=1,page=0,seq=[],split=0,idx=0,ctx=null,an=null,stream=null,buf=null,raf=0,match=0,armed=true,last=-1,cal=0;
-try{cal=Number(localStorage.getItem('guitarPitchCalCentsV3')||0)}catch(e){}
+let track=1,page=0,seq=[],split=0,idx=0,ctx=null,an=null,stream=null,buf=null,raf=0,hist=[],sil=0,armed=true,lastAcceptedPc=null;
 
 function current(){return DATA[String(track)]}
 function load(){
@@ -126,7 +125,7 @@ function load(){
     ...a.map(pc=>({pc,...contextualLabel(pc,cA),bar:page*2})),
     ...b.map(pc=>({pc,...contextualLabel(pc,cB),bar:page*2+1}))
   ];
-  split=a.length; idx=0; match=0; armed=true;
+  split=a.length; idx=0; hist=[]; sil=0; armed=true; lastAcceptedPc=null;
   key.textContent=d.key;
   pg.textContent='Track '+String(track).padStart(2,'0')+' ／ '+(page*2+1)+'–'+Math.min(page*2+2,d.bars.length)+'小節';
   bt1.textContent=(page*2+1)+'小節目'; bt2.textContent=(page*2+2<=d.bars.length?(page*2+2)+'小節目':'');
@@ -148,38 +147,67 @@ function draw(){
 }
 function currentBar(){return idx<split?page*2:page*2+1}
 function currentChord(){return current().chords[currentBar()]||''}
-function accept(pc){
-  if(idx>=seq.length||!armed)return;
-  if(pc===seq[idx].pc){
-    if(++match>=4){idx++;match=0;armed=false;draw()}
-  } else match=0;
+function prep(x){
+  let n=x.length,m=0;for(let v of x)m+=v;m/=n;
+  let y=new Float32Array(n),r=0;for(let i=0;i<n;i++){y[i]=x[i]-m;r+=y[i]*y[i]}
+  return{y,r:Math.sqrt(r/n)};
 }
-
-function yin(x,sr){
-  let n=x.length,mean=0;for(let v of x)mean+=v;mean/=n;
-  let rms=0,y=new Float32Array(n);for(let i=0;i<n;i++){y[i]=x[i]-mean;rms+=y[i]*y[i]}
-  rms=Math.sqrt(rms/n);if(rms<.00035)return{f:-1,r:rms,p:0};
-  let min=Math.floor(sr/1400),max=Math.min(Math.floor(sr/75),n>>1),d=new Float32Array(max+1),c=new Float32Array(max+1);
-  for(let t=1;t<=max;t++){let s=0;for(let i=0;i<n-t;i++){let q=y[i]-y[i+t];s+=q*q}d[t]=s}
-  let run=0,b=-1,bv=1;
-  for(let t=1;t<=max;t++){run+=d[t];c[t]=run?d[t]*t/run:1;if(t>=min&&c[t]<.18){while(t+1<=max&&c[t+1]<c[t])t++;b=t;bv=c[t];break}if(t>=min&&c[t]<bv){b=t;bv=c[t]}}
-  if(b<0||bv>.4)return{f:-1,r:rms,p:1-bv};
-  let tau=b;if(b>1&&b<max){let a=c[b-1],z=c[b+1],den=a+z-2*c[b];if(Math.abs(den)>1e-9)tau=b+(a-z)/(2*den)}
-  return{f:sr/tau,r:rms,p:1-bv};
+function nsdf(y,t){
+  let ac=0,m=0,lim=y.length-t;
+  for(let i=0;i<lim;i++){let a=y[i],b=y[i+t];ac+=a*b;m+=a*a+b*b}
+  return m?2*ac/m:0;
 }
+function mpm(y,sr,weak){
+  let min=Math.max(2,Math.floor(sr/700)),max=Math.min(Math.floor(sr/70),Math.floor(y.length/2)),vals=new Float32Array(max+1),maxv=-1;
+  for(let t=min;t<=max;t++){let v=nsdf(y,t);vals[t]=v;if(v>maxv)maxv=v}
+  let floor=weak?.34:.45;if(maxv<floor)return null;
+  let cutoff=Math.max(weak?.50:.62,maxv*(weak?.80:.86)),peaks=[];
+  for(let t=min+1;t<max;t++)if(vals[t]>vals[t-1]&&vals[t]>=vals[t+1]&&vals[t]>=cutoff)peaks.push(t);
+  if(!peaks.length)return null;
+  let t=peaks[0],a=vals[t-1],b=vals[t],c=vals[t+1],den=a-2*b+c,sh=den?0.5*(a-c)/den:0,
+      lag=t+Math.max(-.5,Math.min(.5,sh)),f=sr/lag;
+  if(f<70||f>700)return null;
+  return{f,clar:b};
+}
+function info(f){
+  let mf=69+12*Math.log2(f/440),m=Math.round(mf),c=100*(mf-m);
+  return{pc:(m%12+12)%12,n:N[(m%12+12)%12],oct:Math.floor(m/12)-1,c};
+}
+function med(a){let z=[...a].sort((a,b)=>a-b);return z[Math.floor(z.length/2)]}
 function loop(){
   if(!an)return;
   an.getFloatTimeDomainData(buf);
-  let p=yin(buf,ctx.sampleRate),pct=Math.min(100,p.r*2600);lev.style.width=pct+'%';
-  if(p.r<.0009){armed=true;last=-1;match=0}
-  if(p.f>75&&p.f<1400){
-    let f=p.f*Math.pow(2,cal/1200),m=69+12*Math.log2(f/440),mr=Math.round(m),pc=(mr%12+12)%12,cent=Math.round(100*(m-mr));
-    note.textContent=noteName(pc);
-    cd.textContent=contextualLabel(pc,currentChord()).label;
-    diag.textContent=f.toFixed(1)+' Hz ／ '+cent+' cent ／ 信頼 '+Math.round(p.p*100)+'%';
-    if(!armed&&last!==-1&&pc!==last)armed=true;last=pc;
-    if(p.p>.55&&Math.abs(cent)<48)accept(pc);
-  } else diag.textContent='入力 '+pct.toFixed(0)+'% ／ 検出待ち';
+  let q=prep(buf),weak=q.r<.00050,short=q.r>=.00025;
+  lev.style.width=Math.min(100,q.r/.0012*100)+'%';
+  if(q.r<.00010){
+    sil++;
+    if(sil>4){hist=[];armed=true;lastAcceptedPc=null;diag.textContent=idx<seq.length?'入力待ち':'完了'}
+    raf=requestAnimationFrame(loop);return;
+  }
+  sil=0;
+  let y=short?q.y.subarray(q.y.length-4096):q.y,p=mpm(y,ctx.sampleRate,weak);
+  if(!p||p.clar<(weak?.40:.58)){
+    diag.textContent='不安定・無視 ／ RMS '+q.r.toFixed(5)+' ／ window '+(short?'4096':'8192');
+    raf=requestAnimationFrame(loop);return;
+  }
+  let i=info(p.f);
+  note.textContent=i.n+i.oct+'（'+i.n+'）';
+  cd.textContent=contextualLabel(i.pc,currentChord()).label;
+  diag.textContent='RMS '+q.r.toFixed(5)+' ／ window '+(short?'4096':'8192')+' ／ clarity '+p.clar.toFixed(2)+' ／ '+p.f.toFixed(2)+' Hz ／ '+(i.c>=0?'+':'')+Math.round(i.c)+' cent';
+  hist.push({pc:i.pc,f:p.f,c:i.c});if(hist.length>5)hist.shift();
+  if(!armed){
+    if(i.pc!==lastAcceptedPc){armed=true;hist=[]}
+    else{raf=requestAnimationFrame(loop);return}
+  }
+  if(idx<seq.length){
+    let same=hist.filter(x=>x.pc===i.pc),need=weak?2:3;
+    if(same.length>=need){
+      let use=same.slice(-need),cspread=Math.max(...use.map(x=>x.c))-Math.min(...use.map(x=>x.c));
+      if(cspread<=30&&Math.abs(med(use.map(x=>x.c)))<=40){
+        if(i.pc===seq[idx].pc){lastAcceptedPc=i.pc;armed=false;idx++;hist=[];draw()}
+      }
+    }
+  }
   raf=requestAnimationFrame(loop);
 }
 async function openInput(){
@@ -187,7 +215,7 @@ async function openInput(){
   stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
   let at=stream.getAudioTracks()[0]; active.textContent=at.label||'入力';
   ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();
-  let src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=4096;buf=new Float32Array(an.fftSize);src.connect(an);
+  let src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=8192;buf=new Float32Array(an.fftSize);src.connect(an);
   cancelAnimationFrame(raf);loop();
 }
 ib.onclick=async()=>{
