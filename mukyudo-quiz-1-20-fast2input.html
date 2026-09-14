@@ -81,7 +81,7 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 }
 
 </style></head><body><div class="app">
-<div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">入力照合版 19</span></div></div></div>
+<div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">ノイズ抑制版 20</span></div></div></div>
 <div class="tabs"><button class="tab active" data-view="mukyudo">無窮動</button><button class="tab" data-view="interval">音程</button><button class="tab" data-view="notehunt">音名</button><button class="tab" data-view="accompaniment">伴奏</button><button class="tab" data-view="settings">設定</button></div>
 <section id="mukyudo" class="view active"><div class="p"><div class="mukyudo-head"><div id="prog" class="prog">1–6–2–5｜Key C｜Ex.01</div><select id="track"></select><div class="mode-toggle"><button id="chordMode" class="btn active">コード基準</button><button id="rootMode" class="btn">Keyルート固定</button></div></div><div id="pg" class="small" style="text-align:center"></div><div id="key" style="display:none">C</div><div class="bars"><div class="bar"><div id="bt1" class="small"></div><div id="c1" class="chord">—</div><div id="b1" class="degs"></div></div><div class="bar"><div id="bt2" class="small"></div><div id="c2" class="chord">—</div><div id="b2" class="degs"></div></div><div id="bridge" class="bridge">→</div></div><div class="detect">検出：<b id="noteM">—</b>　Chord:<b id="cdM">—</b></div><div id="mainNav" class="nav"><button id="prev" class="btn">← 前の2小節</button><button id="retry" class="btn">この2小節を<br>やり直す</button><button id="next" class="btn">次の2小節 →</button></div><div id="complete" class="complete"><div class="complete-title">✓ Exercise 完了！</div><div id="completeSub" class="complete-sub"></div><div class="complete-actions"><button id="againTrack" class="btn">このExerciseをもう一度</button><button id="nextTrack" class="btn">次のExerciseへ →</button></div></div></div></section>
 
@@ -178,7 +178,8 @@ $('accSelect').onchange=()=>{accEx=+$('accSelect').value;accIdx=0;resetAcc()}
 ;if(ACC.length)renderAcc();
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.view))}
 );
-let stream=null,ctx=null,an=null,buf=null,on=false,loopGeneration=0,lastStable=null,lastStableAt=0,lastResult={hz:0,clarity:0,rms:0,window:4096}
+let stream=null,ctx=null,an=null,buf=null,on=false,loopGeneration=0,lastStable=null,lastStableAt=0,lastResult={hz:0,clarity:0,rms:0,window:4096};
+let noiseFloor=.00020,noiseSamples=[],calibrateUntil=0,noteGateUntil=0,previousRms=0
 ;
 async function list(keep){let ins=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');$('dev').innerHTML='';ins.forEach((d,i)=>$('dev').add(new Option(d.label||('入力 '+(i+1)),d.deviceId)));$('dev').disabled=!ins.length;if(keep&&ins.some(d=>d.deviceId===keep))$('dev').value=keep}
 
@@ -190,7 +191,7 @@ async function connect(id,retry=0){const desired=[...$('dev').options].find(o=>o
 );const t=stream.getAudioTracks()[0],settings=t.getSettings?t.getSettings():{}
 ;const actual=t.label||'Audio Input',mismatch=!!id&&((settings.deviceId&&settings.deviceId!==id)||(/THR/i.test(desired)&&!/THR/i.test(actual)));$('routeDiag').textContent='選択：'+desired+' ／ 実際：'+actual+' ／ '+(settings.sampleRate||'?')+'Hz ／ '+(settings.channelCount||'?')+'ch'+(mismatch?' ／ 不一致':' ／ 一致')
 ;if(mismatch&&retry<2){stream.getTracks().forEach(x=>x.stop());stream=null;const fresh=(await navigator.mediaDevices.enumerateDevices()).find(x=>x.kind==='audioinput'&&/THR/i.test(x.label));if(fresh){$('routeDiag').textContent+=' → 再接続 '+(retry+1)+'/2';return connect(fresh.deviceId,retry+1)}}
-;if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=16384;src.connect(an);buf=new Float32Array(an.fftSize);on=true;$('active').textContent=t.label||'Audio Input';$('st').textContent='入力中';$('ib').textContent='ギター入力 OFF';await list(settings.deviceId||id||'');loop(generation)}
+;if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=16384;src.connect(an);buf=new Float32Array(an.fftSize);noiseFloor=.00020;noiseSamples=[];calibrateUntil=performance.now()+1100;noteGateUntil=0;previousRms=0;on=true;$('active').textContent=t.label||'Audio Input';$('st').textContent='ノイズ測定中';$('ib').textContent='ギター入力 OFF';await list(settings.deviceId||id||'');loop(generation)}
 
 $('ib').onclick=async()=>{if(on){stop();return}
 try{await connect('')}
@@ -213,10 +214,13 @@ if(!tau||cmnd[tau]>.70)return null;let better=tau;if(tau>1&&tau<max){let a=cmnd[
 return{hz:sr/better,clarity:1-cmnd[tau]}
 }
 
-function loop(generation){if(generation!==loopGeneration||!on||!an)return;an.getFloatTimeDomainData(buf);let rms=Math.sqrt(buf.reduce((s,v)=>s+v*v,0)/buf.length),w=rms>=.00025?4096:8192,start=buf.length-w,x=buf.slice(start),r=mpm(x,ctx.sampleRate);lastResult={hz:r?.hz||0,clarity:r?.clarity||0,rms,window:w}
-;$('lev').style.width=Math.min(100,rms*15000)+'%';if(r&&rms>=.00018&&r.clarity>=.30){let midi=Math.round(69+12*Math.log2(r.hz/440)),pc=((midi%12)+12)%12,nm=N[pc]+(Math.floor(midi/12)-1);lastStable={midi,pc,nm}
-;lastStableAt=performance.now();handlePitch(lastStable)}
-$('diag').textContent=(r&&rms>=.00018&&r.clarity>=.30?'検出中':'不安定・無視')+' ／ RMS '+rms.toFixed(5)+' ／ window '+w+(r?' ／ clarity '+r.clarity.toFixed(2)+' ／ '+r.hz.toFixed(1)+'Hz':'');requestAnimationFrame(()=>loop(generation))}
+function loop(generation){if(generation!==loopGeneration||!on||!an)return;an.getFloatTimeDomainData(buf);let rms=Math.sqrt(buf.reduce((s,v)=>s+v*v,0)/buf.length),w=rms>=.00025?4096:8192,start=buf.length-w,x=buf.slice(start),r=mpm(x,ctx.sampleRate),now=performance.now();lastResult={hz:r?.hz||0,clarity:r?.clarity||0,rms,window:w}
+;$('lev').style.width=Math.min(100,rms*15000)+'%';if(now<calibrateUntil){noiseSamples.push(rms);if(noiseSamples.length>180)noiseSamples.shift();$('st').textContent='ノイズ測定中';$('diag').textContent='弦を弾かずにお待ちください ／ RMS '+rms.toFixed(5);previousRms=rms;requestAnimationFrame(()=>loop(generation));return}
+if(noiseSamples.length){let sorted=[...noiseSamples].sort((a,b)=>a-b);noiseFloor=Math.max(.00012,sorted[Math.floor((sorted.length-1)*.85)]||.00020);noiseSamples=[];$('st').textContent='入力中'}
+let trigger=Math.max(.00065,noiseFloor*2.35),hold=Math.max(.00035,noiseFloor*1.35),attack=rms>=trigger&&rms>=Math.max(previousRms*1.10,noiseFloor*1.8);if(attack)noteGateUntil=now+850;let gated=now<noteGateUntil&&rms>=hold,accepted=!!(r&&gated&&r.clarity>=.42);previousRms=rms
+;if(accepted){let midi=Math.round(69+12*Math.log2(r.hz/440)),pc=((midi%12)+12)%12,nm=N[pc]+(Math.floor(midi/12)-1);lastStable={midi,pc,nm}
+;lastStableAt=now;handlePitch(lastStable)}
+$('diag').textContent=(accepted?'検出中':rms<trigger?'ノイズ・無視':'立ち上がり待ち')+' ／ RMS '+rms.toFixed(5)+' ／ noise '+noiseFloor.toFixed(5)+' ／ threshold '+trigger.toFixed(5)+(r?' ／ clarity '+r.clarity.toFixed(2)+' ／ '+r.hz.toFixed(1)+'Hz':'');requestAnimationFrame(()=>loop(generation))}
 
 function handlePitch(p){const active=document.querySelector('.view.active')?.id;$('noteM').textContent=p.nm;$('noteI').textContent=p.nm;$('noteN').textContent=p.nm;$('noteA').textContent=p.nm;
 if(active==='mukyudo'&&seq[idx]){$('cdM').textContent=seq[idx].label;if(p.pc===seq[idx].pc){idx++;drawDeg('b1',seq.slice(0,split),0);drawDeg('b2',seq.slice(split),split);if(idx>=seq.length){let maxPage=Math.ceil(cur().bars.length/2)-1;if(page<maxPage){setTimeout(()=>{page++;loadM()}
