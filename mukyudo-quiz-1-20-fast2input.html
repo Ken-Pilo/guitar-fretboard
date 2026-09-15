@@ -18,6 +18,9 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 .key{text-align:center;font-size:46px;font-weight:900;line-height:1}
 .mukyudo-head{display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:6px}
 .mukyudo-head select{width:100%}
+.key-select-row{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:center}
+.key-select-row select{width:100%}
+.first-pos{margin-top:6px;padding:7px 10px;border:1px solid #28506c;border-radius:9px;background:#081722;color:#68bdff;text-align:center;font-size:14px;font-weight:800}
 .prog{font-size:20px;font-weight:900;line-height:1.2}
 .mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .mode-toggle .btn.active{background:#1495f5;border-color:#1495f5}
@@ -81,9 +84,9 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 }
 
 </style></head><body><div class="app">
-<div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">1音1判定版 22</span></div></div></div>
+<div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">Key変更版 23</span></div></div></div>
 <div class="tabs"><button class="tab active" data-view="mukyudo">無窮動</button><button class="tab" data-view="interval">音程</button><button class="tab" data-view="notehunt">音名</button><button class="tab" data-view="accompaniment">伴奏</button><button class="tab" data-view="settings">設定</button></div>
-<section id="mukyudo" class="view active"><div class="p"><div class="mukyudo-head"><div id="prog" class="prog">1–6–2–5｜Key C｜Ex.01</div><select id="track"></select><div class="mode-toggle"><button id="chordMode" class="btn active">コード基準</button><button id="rootMode" class="btn">Keyルート固定</button></div></div><div id="pg" class="small" style="text-align:center"></div><div id="key" style="display:none">C</div><div class="bars"><div class="bar"><div id="bt1" class="small"></div><div id="c1" class="chord">—</div><div id="b1" class="degs"></div></div><div class="bar"><div id="bt2" class="small"></div><div id="c2" class="chord">—</div><div id="b2" class="degs"></div></div><div id="bridge" class="bridge">→</div></div><div class="detect">検出：<b id="noteM">—</b>　Chord:<b id="cdM">—</b></div><div id="mainNav" class="nav"><button id="prev" class="btn">← 前の2小節</button><button id="retry" class="btn">この2小節を<br>やり直す</button><button id="next" class="btn">次の2小節 →</button></div><div id="complete" class="complete"><div class="complete-title">✓ Exercise 完了！</div><div id="completeSub" class="complete-sub"></div><div class="complete-actions"><button id="againTrack" class="btn">このExerciseをもう一度</button><button id="nextTrack" class="btn">次のExerciseへ →</button></div></div></div></section>
+<section id="mukyudo" class="view active"><div class="p"><div class="mukyudo-head"><div id="prog" class="prog">1–6–2–5｜Key C｜Ex.01</div><select id="track"></select><div class="key-select-row"><span class="small">練習Key</span><select id="practiceKey"></select></div><div class="mode-toggle"><button id="chordMode" class="btn active">コード基準</button><button id="rootMode" class="btn">Keyルート固定</button></div></div><div id="pg" class="small" style="text-align:center"></div><div id="firstPos" class="first-pos">最初の1音：—</div><div id="key" style="display:none">C</div><div class="bars"><div class="bar"><div id="bt1" class="small"></div><div id="c1" class="chord">—</div><div id="b1" class="degs"></div></div><div class="bar"><div id="bt2" class="small"></div><div id="c2" class="chord">—</div><div id="b2" class="degs"></div></div><div id="bridge" class="bridge">→</div></div><div class="detect">検出：<b id="noteM">—</b>　Chord:<b id="cdM">—</b></div><div id="mainNav" class="nav"><button id="prev" class="btn">← 前の2小節</button><button id="retry" class="btn">この2小節を<br>やり直す</button><button id="next" class="btn">次の2小節 →</button></div><div id="complete" class="complete"><div class="complete-title">✓ Exercise 完了！</div><div id="completeSub" class="complete-sub"></div><div class="complete-actions"><button id="againTrack" class="btn">このExerciseをもう一度</button><button id="nextTrack" class="btn">次のExerciseへ →</button></div></div></div></section>
 
 <section id="interval" class="view"><div id="ivSetup" class="setup"><div class="setup-card"><div class="title">インターバル・トレーナー</div><div class="setup-row"><div><b>Root</b><div class="small">固定またはランダム</div></div><select id="rootSel"><option value="random">Random</option></select></div><div class="setup-row"><div><b>Rootを先に弾く</b><div class="small">Root → 指定度数の順で判定</div></div><label class="switch"><input id="rootFirst" type="checkbox"></label></div></div>
 <div class="setup-card"><div class="row"><div class="title">出題する度数</div><button id="allIv" class="btn" style="margin-left:auto">全選択</button><button id="clearIv" class="btn">全解除</button></div><div class="preset-row"><button class="btn preset" data-p="maj">M</button><button class="btn preset" data-p="min">m</button><button class="btn preset" data-p="7">7</button><button class="btn preset" data-p="maj7">M7</button><button class="btn preset" data-p="min7">m7</button><button class="btn preset" data-p="m7b5">m7♭5</button><button class="btn preset" data-p="dim7">dim7</button><button class="btn preset" data-p="majpent">Major Pent.</button><button class="btn preset" data-p="minpent">Minor Pent.</button><button class="btn preset" data-p="tension">テンション</button></div><div id="ivGrid" class="iv-grid"></div></div>
@@ -104,7 +107,7 @@ let DATA={}
 catch(e){document.body.innerHTML='<div style="padding:20px;color:white">データ読込エラー: '+e.message+'</div>';return}
 let ACC=[];try{ACC=await fetch('accompaniment-solo-data.json?data='+Date.now(),{cache:'no-store'}).then(r=>r.json())}catch(e){console.warn('伴奏データ読込エラー',e)}
 
-const track=$('track');Object.keys(DATA).sort((a,b)=>+a-+b).forEach(k=>track.add(new Option(DATA[k].name,k)));const ROOTS=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];ROOTS.forEach((n,i)=>$('rootSel').add(new Option(n,String(i))));
+const track=$('track');Object.keys(DATA).sort((a,b)=>+a-+b).forEach(k=>track.add(new Option(DATA[k].name,k)));const ROOTS=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];ROOTS.forEach((n,i)=>{$('rootSel').add(new Option(n,String(i)));$('practiceKey').add(new Option(n,n))});
 const IVS=[['R',0],['m2',1],['△2',2],['m3',3],['△3',4],['P4',5],['♭5',6],['P5',7],['m6',8],['△6',9],['♭♭7',9],['m7',10],['△7',11],['♭9',1],['9',2],['♯9',3],['11',5],['♯11',6],['♭13',8],['13',9]];let selectedIv=new Set(['m3','P4','♭5','P5','m7']);IVS.forEach(([lab])=>{let b=document.createElement('button');b.className='iv'+(selectedIv.has(lab)?' on':'');b.textContent=lab;b.onclick=()=>{selectedIv.has(lab)?selectedIv.delete(lab):selectedIv.add(lab);b.classList.toggle('on')}
 ;$('ivGrid').appendChild(b)}
 );
@@ -140,15 +143,21 @@ function contour(pcs){if(!pcs.length)return[];let out=[pcs[0]];for(let i=1;i<pcs
 return out}
 
 let tr=1,page=0,seq=[],split=0,idx=0,melodyHeights=[],rootFixed=false;function cur(){return DATA[String(tr)]}
-function loadM(){const d=cur(),a=d.bars[page*2]||[],b=d.bars[page*2+1]||[],ma=(d.barsMidi&&d.barsMidi[page*2])||a,mb=(d.barsMidi&&d.barsMidi[page*2+1])||b,realCa=d.chords[page*2]||'',realCb=d.chords[page*2+1]||'',ca=rootFixed?'Root '+d.key:realCa,cb=rootFixed?'Root '+d.key:realCb;seq=[...a.map(pc=>({pc,...(rootFixed?rootLabel(pc,d.key):contextualLabel(pc,realCa))}
-)),...b.map(pc=>({pc,...(rootFixed?rootLabel(pc,d.key):contextualLabel(pc,realCb))}
-))];split=a.length;melodyHeights=[...ma,...mb];if(!melodyHeights.length)melodyHeights=contour(seq.map(x=>x.pc));idx=0;$('complete').classList.remove('show');$('mainNav').style.display='flex';$('key').textContent=d.key;$('prog').textContent=d.name+(rootFixed?'｜Root '+d.key+'固定':'｜コード基準');$('pg').textContent='No.'+String(tr).padStart(2,'0')+' ／ '+(page*2+1)+'–'+Math.min(page*2+2,d.bars.length)+'小節';$('bt1').textContent=(page*2+1)+'小節目';$('bt2').textContent=(page*2+2<=d.bars.length?(page*2+2)+'小節目':'');$('c1').textContent=ca||'—';$('c2').textContent=cb||'—';drawDeg('b1',seq.slice(0,split),0);drawDeg('b2',seq.slice(split),split);let dh=melodyHeights[split]-melodyHeights[split-1];$('bridge').textContent=!b.length?'✓':dh>0?'↗':dh<0?'↘':'→'}
+function signedTranspose(fromKey,toKey){let d=((NOTE_PC[toKey]-NOTE_PC[fromKey])%12+12)%12;return d>6?d-12:d}
+function transposeChord(ch,delta){const m=(ch||'').match(/^([A-G][♯♭]?)(.*)$/);if(!m)return ch;return N[((NOTE_PC[m[1]]+delta)%12+12)%12]+m[2]}
+function exerciseName(d,key){let name=d.name.replace(/Key [^｜]+/,'Key '+key);return name===d.name&&!name.includes('Key ')?name+'｜Key '+key:name}
+function firstPosition(d,delta){const fp=d.firstPosition;if(!fp)return null;const midi=fp.midi+delta,same={string:fp.string,fret:fp.fret+delta};if(same.fret>=0&&same.fret<=24)return{midi,...same};let choices=[];for(let s=1;s<=6;s++){let fret=midi-TUNE[s];if(fret>=0&&fret<=24)choices.push({midi,string:s,fret,score:Math.abs(fret-fp.fret)+Math.abs(s-fp.string)*2})}choices.sort((a,b)=>a.score-b.score);return choices[0]||null}
+function showFirstPosition(d,delta){const pos=firstPosition(d,delta);if(!pos){$('firstPos').style.display='none';return}let name=N[((pos.midi%12)+12)%12]+(Math.floor(pos.midi/12)-1);$('firstPos').textContent='最初の1音：'+name+'｜'+pos.string+'弦 '+pos.fret+'フレット';$('firstPos').style.display=page===0&&idx===0?'block':'none'}
+function loadM(){const d=cur(),key=$('practiceKey').value||d.key,delta=signedTranspose(d.key,key),oa=d.bars[page*2]||[],ob=d.bars[page*2+1]||[],a=oa.map(pc=>(pc+delta+12)%12),b=ob.map(pc=>(pc+delta+12)%12),oma=(d.barsMidi&&d.barsMidi[page*2])||oa,omb=(d.barsMidi&&d.barsMidi[page*2+1])||ob,ma=oma.map(x=>x+delta),mb=omb.map(x=>x+delta),realCa=transposeChord(d.chords[page*2]||'',delta),realCb=transposeChord(d.chords[page*2+1]||'',delta),ca=rootFixed?'Root '+key:realCa,cb=rootFixed?'Root '+key:realCb;seq=[...a.map(pc=>({pc,...(rootFixed?rootLabel(pc,key):contextualLabel(pc,realCa))}
+)),...b.map(pc=>({pc,...(rootFixed?rootLabel(pc,key):contextualLabel(pc,realCb))}
+))];split=a.length;melodyHeights=[...ma,...mb];if(!melodyHeights.length)melodyHeights=contour(seq.map(x=>x.pc));idx=0;$('complete').classList.remove('show');$('mainNav').style.display='flex';$('key').textContent=key;$('prog').textContent=exerciseName(d,key)+(rootFixed?'｜Root '+key+'固定':'｜コード基準');$('pg').textContent='No.'+String(tr).padStart(2,'0')+' ／ Original Key '+d.key+' ／ '+(page*2+1)+'–'+Math.min(page*2+2,d.bars.length)+'小節';showFirstPosition(d,delta);$('bt1').textContent=(page*2+1)+'小節目';$('bt2').textContent=(page*2+2<=d.bars.length?(page*2+2)+'小節目':'');$('c1').textContent=ca||'—';$('c2').textContent=cb||'—';drawDeg('b1',seq.slice(0,split),0);drawDeg('b2',seq.slice(split),split);let dh=melodyHeights[split]-melodyHeights[split-1];$('bridge').textContent=!b.length?'✓':dh>0?'↗':dh<0?'↘':'→'}
 function drawDeg(id,a,off){let box=$(id);box.innerHTML='';let heights=melodyHeights.slice(off,off+a.length),hi=Math.max(...melodyHeights),lo=Math.min(...melodyHeights),mid=(hi+lo)/2;a.forEach((x,j)=>{let w=document.createElement('div');w.className='step';w.style.transform='translateY('+((mid-heights[j])*7)+'px)';let e=document.createElement('div');e.className='d '+(off+j<idx?'ok':off+j===idx?'now':'');e.textContent=x.label;w.appendChild(e);box.appendChild(w)}
 )}
 $('prev').onclick=()=>{page=Math.max(0,page-1);loadM()}
 ;$('next').onclick=()=>{page=Math.min(Math.ceil(cur().bars.length/2)-1,page+1);loadM()}
 ;$('retry').onclick=()=>{idx=0;loadM()}
-;track.onchange=()=>{tr=+track.value;page=0;loadM()}
+;track.onchange=()=>{tr=+track.value;page=0;$('practiceKey').value=cur().key;loadM()}
+;$('practiceKey').onchange=()=>{page=0;loadM()}
 ;$('chordMode').onclick=()=>{rootFixed=false;$('chordMode').classList.add('active');$('rootMode').classList.remove('active');loadM()}
 ;$('rootMode').onclick=()=>{rootFixed=true;$('rootMode').classList.add('active');$('chordMode').classList.remove('active');loadM()}
 ;
@@ -223,7 +232,7 @@ let trigger=Math.max(.00040,noiseFloor*1.85),hold=Math.max(.00024,noiseFloor*1.1
 $('diag').textContent=(freshAccepted?'検出':accepted?'同じピッキング・待機':rms<trigger?'ノイズ・無視':'立ち上がり待ち')+' ／ RMS '+rms.toFixed(5)+' ／ noise '+noiseFloor.toFixed(5)+' ／ threshold '+trigger.toFixed(5)+(r?' ／ clarity '+r.clarity.toFixed(2)+' ／ '+r.hz.toFixed(1)+'Hz':'');requestAnimationFrame(()=>loop(generation))}
 
 function handlePitch(p){const active=document.querySelector('.view.active')?.id;$('noteM').textContent=p.nm;$('noteI').textContent=p.nm;$('noteN').textContent=p.nm;$('noteA').textContent=p.nm;
-if(active==='mukyudo'&&seq[idx]){$('cdM').textContent=seq[idx].label;if(p.pc===seq[idx].pc){idx++;drawDeg('b1',seq.slice(0,split),0);drawDeg('b2',seq.slice(split),split);if(idx>=seq.length){let maxPage=Math.ceil(cur().bars.length/2)-1;if(page<maxPage){setTimeout(()=>{page++;loadM()}
+if(active==='mukyudo'&&seq[idx]){$('cdM').textContent=seq[idx].label;if(p.pc===seq[idx].pc){idx++;if(page===0&&idx>0)$('firstPos').style.display='none';drawDeg('b1',seq.slice(0,split),0);drawDeg('b2',seq.slice(split),split);if(idx>=seq.length){let maxPage=Math.ceil(cur().bars.length/2)-1;if(page<maxPage){setTimeout(()=>{page++;loadM()}
 ,180)}else{$('cdM').textContent='完了';$('completeSub').textContent=cur().name+'を最後まで演奏しました';$('mainNav').style.display='none';$('complete').classList.add('show');setTimeout(()=>$('complete').scrollIntoView({behavior:'smooth',block:'center'}
 ),80)}}}}
 if(active==='interval'&&ivActive&&ivTarget&&inRange(p.midi)&&!ivLocked){let now=performance.now();if(ivCandidatePc!==p.pc){ivCandidatePc=p.pc;ivCandidateAt=now;return}
@@ -234,7 +243,7 @@ if(now-noteCandidateAt>=90&&p.pc===noteTarget){noteLocked=true;$('noteState').te
 if(active==='accompaniment'&&!accLocked&&accEvent()){const wanted=new Set(accEvent().notes.map(n=>n.pc));if(wanted.has(p.pc)){accHits.add(p.pc);renderAcc();if([...wanted].every(pc=>accHits.has(pc))){accLocked=true;$('accState').textContent='正解！';setTimeout(()=>{if(accIdx<ACC[accEx].events.length-1){accIdx++;resetAcc()}else{$('accState').textContent='Exercise 完了！'}},180)}}}}
 
 $('againTrack').onclick=()=>{page=0;idx=0;loadM()}
-;$('nextTrack').onclick=()=>{tr=Math.min(Object.keys(DATA).length,tr+1);track.value=String(tr);page=0;loadM()}
+;$('nextTrack').onclick=()=>{tr=Math.min(Object.keys(DATA).length,tr+1);track.value=String(tr);page=0;$('practiceKey').value=cur().key;loadM()}
 ;
 if(navigator.mediaDevices&&'ondevicechange' in navigator.mediaDevices)navigator.mediaDevices.ondevicechange=()=>{if(!stream)list('')}
 ;track.value='1';loadM();}
