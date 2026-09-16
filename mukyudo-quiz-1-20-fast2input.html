@@ -10,7 +10,7 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 .btn{font-weight:750}
 .song{font-size:20px;font-weight:900}
 .small{font-size:12px;color:#aaa}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:9px}
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:9px}
 .tab{background:#111;color:#aaa;border:1px solid #333;border-radius:12px;padding:11px 3px;font-weight:850;font-size:14px}
 .tab.active{background:#242424;color:#fff;border-color:#666}
 .view{display:none}
@@ -28,6 +28,16 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 .root-board-title{text-align:center;font-size:13px;font-weight:850;color:#68bdff;margin-bottom:3px}
 .root-board svg{display:block;width:100%;height:auto}
 .note-pos-text{font-size:11px;color:#c8d6e0;line-height:1.65;text-align:center;margin-top:3px}
+.dia-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.dia-card{border:1px solid #3b3b3b;border-radius:11px;padding:10px 3px;text-align:center;background:#171717}
+.dia-card .roman{font-size:13px;color:#bbb}.dia-card .dia-chord{font-size:20px;font-weight:900;margin-top:4px}
+.dia-card.tonic{border-color:#287db5;background:#09243a}.dia-card.subdominant{border-color:#35815a;background:#0c291c}.dia-card.dominant{border-color:#a64a4a;background:#351212}
+.dia-legend{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:#aaa}
+.dia-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+.dia-quiz{margin-top:13px;padding:13px;border:1px solid #333;border-radius:12px;background:#111}
+.dia-question{text-align:center;font-size:22px;font-weight:900;margin:12px 0}
+.dia-choices{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.dia-choices button.correct{background:#12673d;border-color:#39b875}.dia-choices button.wrong{background:#762626;border-color:#d75b5b}
 .prog{font-size:20px;font-weight:900;line-height:1.2}
 .mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .mode-toggle .btn.active{background:#1495f5;border-color:#1495f5}
@@ -87,12 +97,14 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 .key{font-size:40px}
 .bar{padding:8px}
 .song{font-size:17px}
+.tab{font-size:12px;padding-left:1px;padding-right:1px}
+.dia-grid{grid-template-columns:repeat(4,1fr)}
 .iv-grid{grid-template-columns:repeat(4,1fr)}
 }
 
 </style></head><body><div class="app">
-<div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">五線譜整理版 32</span></div></div></div>
-<div class="tabs"><button class="tab active" data-view="mukyudo">無窮動</button><button class="tab" data-view="interval">音程</button><button class="tab" data-view="notehunt">音名</button><button class="tab" data-view="accompaniment">伴奏</button><button class="tab" data-view="settings">設定</button></div>
+<div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">ダイアトニック版 33</span></div></div></div>
+<div class="tabs"><button class="tab active" data-view="mukyudo">無窮動</button><button class="tab" data-view="interval">音程</button><button class="tab" data-view="notehunt">音名</button><button class="tab" data-view="diatonic">コード</button><button class="tab" data-view="accompaniment">伴奏</button><button class="tab" data-view="settings">設定</button></div>
 <section id="mukyudo" class="view active"><div class="p"><div class="mukyudo-head"><div id="prog" class="prog">1–6–2–5｜Key C｜Ex.01</div><select id="track"></select><div class="key-select-row"><span class="small">練習Key</span><select id="practiceKey"></select></div><div class="mode-toggle"><button id="chordMode" class="btn active">コード基準</button><button id="rootMode" class="btn">Keyルート固定</button></div></div><div id="pg" class="small" style="text-align:center"></div><div id="firstPos" class="first-pos">最初の1音：—</div><div id="key" style="display:none">C</div><div id="degreeBars" class="bars"><div class="bar"><div id="bt1" class="small"></div><div id="c1" class="chord">—</div><div id="b1" class="degs"></div></div><div class="bar"><div id="bt2" class="small"></div><div id="c2" class="chord">—</div><div id="b2" class="degs"></div></div><div id="bridge" class="bridge">→</div></div><div id="staffPanel" class="staff-panel"><div class="staff-title">Ex.01 五線譜＋度数（2小節）</div><svg id="staffSvg" viewBox="0 0 760 180" role="img" aria-label="2小節の五線譜"></svg></div><div class="detect">検出：<b id="noteM">—</b>　Chord:<b id="cdM">—</b></div><div id="mainNav" class="nav"><button id="prev" class="btn">← 前の2小節</button><button id="retry" class="btn">この2小節を<br>やり直す</button><button id="next" class="btn">次の2小節 →</button></div><div id="complete" class="complete"><div class="complete-title">✓ Exercise 完了！</div><div id="completeSub" class="complete-sub"></div><div class="complete-actions"><button id="againTrack" class="btn">このExerciseをもう一度</button><button id="nextTrack" class="btn">次のExerciseへ →</button></div></div></div></section>
 
 <section id="interval" class="view"><div id="ivSetup" class="setup"><div class="setup-card"><div class="title">インターバル・トレーナー</div><div class="setup-row"><div><b>Root</b><div class="small">固定またはランダム</div></div><select id="rootSel"><option value="random">Random</option></select></div><div class="setup-row"><div><b>Rootを先に弾く</b><div class="small">Root → 指定度数の順で判定</div></div><label class="switch"><input id="rootFirst" type="checkbox"></label></div></div>
@@ -100,6 +112,8 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 <div class="setup-card"><div class="title">押さえる範囲</div><div class="small" style="margin-bottom:7px">使用する弦</div><div id="stringGrid" class="string-grid"></div><div class="range" style="margin-top:10px"><label class="small">開始フレット<input id="fretFrom" type="number" min="0" max="24" value="0" style="width:100%"></label><label class="small">終了フレット<input id="fretTo" type="number" min="0" max="24" value="12" style="width:100%"></label></div></div><button id="startIv" class="btn" style="width:100%;background:#1495f5;border-color:#1495f5;font-size:18px">インターバル練習を開始</button></div><div id="ivWorkout" class="workout"><div class="p"><div class="rootLine">Root <b id="workRoot">C</b></div><div class="bigTarget" id="workTarget">P5</div><div id="workState" class="small" style="text-align:center">指定度数を弾いてください</div><div id="rangeInfo" class="hintbox small"></div><div class="detect">検出：<b id="noteI">—</b>　Interval:<b id="cdI">—</b></div><div class="nav"><button id="stopIv" class="btn">設定に戻る</button><button id="skipIv" class="btn">次の問題</button></div></div></div></section>
 
 <section id="notehunt" class="view"><div class="p"><div class="title">音名を探す</div><div class="small" style="text-align:center">表示された音を、指板の好きな場所で弾いてください</div><div class="bigTarget" id="noteTarget">C♯</div><div id="noteState" class="small" style="text-align:center">開始を押してください</div><div class="detect">検出：<b id="noteN">—</b></div><div class="nav"><button id="startNote" class="btn" style="background:#1495f5;border-color:#1495f5">開始</button><button id="nextNote" class="btn">次の音</button></div></div></section>
+
+<section id="diatonic" class="view"><div class="p"><div class="title">ダイアトニック・コード</div><div class="key-select-row"><span class="small">Key</span><select id="diaKey"></select></div><div class="mode-toggle" style="margin-top:7px"><button id="diaTriad" class="btn active">3和音</button><button id="diaSeventh" class="btn">4和音</button></div><div id="diaGrid" class="dia-grid"></div><div class="dia-legend"><span><i class="dia-dot" style="background:#287db5"></i>Tonic</span><span><i class="dia-dot" style="background:#35815a"></i>Subdominant</span><span><i class="dia-dot" style="background:#a64a4a"></i>Dominant</span></div><div class="dia-quiz"><div class="row"><select id="diaQuizType" style="flex:1"><option value="degree">度数 → コード</option><option value="chord">コード → 度数</option></select><div id="diaScore" class="small">0問正解</div></div><div id="diaQuestion" class="dia-question"></div><div id="diaChoices" class="dia-choices"></div><button id="diaNext" class="btn" style="width:100%;margin-top:8px">次の問題</button></div></div></section>
 
 <section id="accompaniment" class="view"><div class="p"><div class="title">伴奏＆ソロ構築</div><select id="accSelect" style="width:100%"></select><div id="accInfo" class="small" style="text-align:center;margin-top:8px"></div><div id="accTarget" class="acc-target"></div><div id="accState" class="small" style="text-align:center">単音はそのまま、コードはまとめて／ばらして弾けます</div><div class="detect">検出：<b id="noteA">—</b></div><div class="nav"><button id="accPrev" class="btn">← 前</button><button id="accRetry" class="btn">やり直し</button><button id="accNext" class="btn">次 →</button></div></div></section>
 
@@ -216,6 +230,25 @@ let noteActive=false,noteTarget=1,noteCandidate=null,noteCandidateAt=0,noteLocke
 function nextNote(){let next;do{next=Math.floor(Math.random()*12)}while(next===noteTarget);noteTarget=next;noteCandidate=null;noteCandidateAt=0;noteLocked=false;$('noteTarget').textContent=N[noteTarget];$('noteState').textContent='この音を探して弾いてください'}
 $('startNote').onclick=()=>{noteActive=true;$('startNote').textContent='出題中';nextNote()}
 ;$('nextNote').onclick=()=>{noteActive=true;nextNote()}
+const DIA_SCALES={
+ 'C':['C','D','E','F','G','A','B'],'C♯':['C♯','D♯','E♯','F♯','G♯','A♯','B♯'],
+ 'D':['D','E','F♯','G','A','B','C♯'],'E♭':['E♭','F','G','A♭','B♭','C','D'],
+ 'E':['E','F♯','G♯','A','B','C♯','D♯'],'F':['F','G','A','B♭','C','D','E'],
+ 'F♯':['F♯','G♯','A♯','B','C♯','D♯','E♯'],'G':['G','A','B','C','D','E','F♯'],
+ 'A♭':['A♭','B♭','C','D♭','E♭','F','G'],'A':['A','B','C♯','D','E','F♯','G♯'],
+ 'B♭':['B♭','C','D','E♭','F','G','A'],'B':['B','C♯','D♯','E','F♯','G♯','A♯']
+};
+ROOTS.forEach(k=>$('diaKey').add(new Option(k,k)));$('diaKey').value='D';
+let diaFour=false,diaCorrect=0,diaLast=-1,diaAnswered=false;
+const DIA_DEG3=['Ⅰ','Ⅱm','Ⅲm','Ⅳ','Ⅴ','Ⅵm','Ⅶdim'],DIA_DEG4=['ⅠMaj7','Ⅱm7','Ⅲm7','ⅣMaj7','Ⅴ7','Ⅵm7','Ⅶm7♭5'];
+const DIA_Q3=['','m','m','','','m','dim'],DIA_Q4=['Maj7','m7','m7','Maj7','7','m7','m7♭5'],DIA_ROLE=['tonic','subdominant','tonic','subdominant','dominant','tonic','dominant'];
+function diaItems(){const notes=DIA_SCALES[$('diaKey').value],q=diaFour?DIA_Q4:DIA_Q3,deg=diaFour?DIA_DEG4:DIA_DEG3;return notes.map((note,i)=>({degree:deg[i],chord:note+q[i],role:DIA_ROLE[i]}))}
+function renderDia(){const items=diaItems();$('diaGrid').innerHTML='';items.forEach(x=>{let d=document.createElement('div');d.className='dia-card '+x.role;d.innerHTML='<div class="roman">'+x.degree+'</div><div class="dia-chord">'+x.chord+'</div>';$('diaGrid').appendChild(d)});newDiaQuiz()}
+function newDiaQuiz(){const items=diaItems(),type=$('diaQuizType').value;let target;do{target=Math.floor(Math.random()*7)}while(target===diaLast);diaLast=target;diaAnswered=false;const correct=type==='degree'?items[target].chord:items[target].degree;$('diaQuestion').textContent=type==='degree'?'Key '+$('diaKey').value+' の '+items[target].degree+' は？':'Key '+$('diaKey').value+' で '+items[target].chord+' は何度？';let pool=items.map(x=>type==='degree'?x.chord:x.degree),wrong=pool.filter(x=>x!==correct).sort(()=>Math.random()-.5).slice(0,3),choices=[correct,...wrong].sort(()=>Math.random()-.5);$('diaChoices').innerHTML='';choices.forEach(answer=>{let b=document.createElement('button');b.className='btn';b.textContent=answer;b.onclick=()=>{if(diaAnswered)return;diaAnswered=true;[...$('diaChoices').children].forEach(x=>{if(x.textContent===correct)x.classList.add('correct')});if(answer===correct){diaCorrect++;$('diaScore').textContent=diaCorrect+'問正解';setTimeout(newDiaQuiz,500)}else b.classList.add('wrong')};$('diaChoices').appendChild(b)})}
+$('diaKey').onchange=renderDia;$('diaQuizType').onchange=newDiaQuiz;$('diaNext').onclick=newDiaQuiz;
+$('diaTriad').onclick=()=>{diaFour=false;$('diaTriad').classList.add('active');$('diaSeventh').classList.remove('active');renderDia()};
+$('diaSeventh').onclick=()=>{diaFour=true;$('diaSeventh').classList.add('active');$('diaTriad').classList.remove('active');renderDia()};
+renderDia();
 let accEx=0,accIdx=0,accHits=new Set(),accLocked=false;
 ACC.forEach((x,i)=>$('accSelect').add(new Option(x.name+'｜Root '+x.root,i)));
 function accEvent(){return ACC[accEx]?.events[accIdx]}
