@@ -103,7 +103,7 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 }
 
 </style></head><body><div class="app">
-<div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">全Exercise五線譜版 34</span></div></div></div>
+<div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">Track60・PDFコード版 35</span></div></div></div>
 <div class="tabs"><button class="tab active" data-view="mukyudo">無窮動</button><button class="tab" data-view="interval">音程</button><button class="tab" data-view="notehunt">音名</button><button class="tab" data-view="diatonic">コード</button><button class="tab" data-view="accompaniment">伴奏</button><button class="tab" data-view="settings">設定</button></div>
 <section id="mukyudo" class="view active"><div class="p"><div class="mukyudo-head"><div id="prog" class="prog">1–6–2–5｜Key C｜Ex.01</div><select id="track"></select><div class="key-select-row"><span class="small">練習Key</span><select id="practiceKey"></select></div><div class="mode-toggle"><button id="chordMode" class="btn active">コード基準</button><button id="rootMode" class="btn">Keyルート固定</button></div></div><div id="pg" class="small" style="text-align:center"></div><div id="firstPos" class="first-pos">最初の1音：—</div><div id="key" style="display:none">C</div><div id="degreeBars" class="bars"><div class="bar"><div id="bt1" class="small"></div><div id="c1" class="chord">—</div><div id="b1" class="degs"></div></div><div class="bar"><div id="bt2" class="small"></div><div id="c2" class="chord">—</div><div id="b2" class="degs"></div></div><div id="bridge" class="bridge">→</div></div><div id="staffPanel" class="staff-panel"><div class="staff-title">五線譜＋度数（2小節）</div><svg id="staffSvg" viewBox="0 0 760 180" role="img" aria-label="2小節の五線譜"></svg></div><div class="detect">検出：<b id="noteM">—</b>　Chord:<b id="cdM">—</b></div><div id="mainNav" class="nav"><button id="prev" class="btn">← 前の2小節</button><button id="retry" class="btn">この2小節を<br>やり直す</button><button id="next" class="btn">次の2小節 →</button></div><div id="complete" class="complete"><div class="complete-title">✓ Exercise 完了！</div><div id="completeSub" class="complete-sub"></div><div class="complete-actions"><button id="againTrack" class="btn">このExerciseをもう一度</button><button id="nextTrack" class="btn">次のExerciseへ →</button></div></div></div></section>
 
@@ -142,11 +142,14 @@ $('allIv').onclick=()=>{selectedIv=new Set(IVS.map(x=>x[0]));[...$('ivGrid').chi
 function rootLabel(pc,key){const labels=['R','m2','△2','m3','△3','P4','♭5','P5','m6','△6','m7','△7'],root=NOTE_PC[key]??0;return{label:labels[((pc-root)%12+12)%12],kind:''}
 }
 
-function chordInfo(s){const m=(s||'').match(/^([A-G])([♯♭]?)(Maj7|m7♭5|dim7|m7|7)/);if(!m)return null;const root=NOTE_PC[m[1]+(m[2]||'')]??0,q=m[3];let tones=q==='Maj7'?{0:'R',4:'△3',7:'P5',11:'△7'}
+function chordInfo(s){const m=(s||'').match(/^([A-G])([♯♭]?)(Maj7|m7♭5|dim7|m7|7|dim|m)?/);if(!m)return null;const root=NOTE_PC[m[1]+(m[2]||'')]??0,q=m[3]||'';let tones=q==='Maj7'?{0:'R',4:'△3',7:'P5',11:'△7'}
 :q==='m7♭5'?{0:'R',3:'m3',6:'♭5',10:'m7'}
 :q==='dim7'?{0:'R',3:'m3',6:'♭5',9:'♭♭7'}
 :q==='m7'?{0:'R',3:'m3',7:'P5',10:'m7'}
-:{0:'R',4:'△3',7:'P5',10:'m7'}
+:q==='7'?{0:'R',4:'△3',7:'P5',10:'m7'}
+:q==='dim'?{0:'R',3:'m3',6:'♭5'}
+:q==='m'?{0:'R',3:'m3',7:'P5'}
+:{0:'R',4:'△3',7:'P5'}
 ;return{root,tones}
 }
 function contextualLabel(pc,chord){const ci=chordInfo(chord);if(!ci)return{label:'?',kind:''}
@@ -165,7 +168,7 @@ return out}
 
 let tr=1,page=0,seq=[],split=0,idx=0,melodyHeights=[],rootFixed=false;function cur(){return DATA[String(tr)]}
 function signedTranspose(fromKey,toKey){let d=((NOTE_PC[toKey]-NOTE_PC[fromKey])%12+12)%12;return d>6?d-12:d}
-function transposeChord(ch,delta){const m=(ch||'').match(/^([A-G][♯♭]?)(.*)$/);if(!m)return ch;return N[((NOTE_PC[m[1]]+delta)%12+12)%12]+m[2]}
+function transposeChord(ch,delta){return(ch||'').split(/\s*\/\s*/).map(part=>{const m=part.match(/^([A-G][♯♭]?)(.*)$/);if(!m)return part;return N[((NOTE_PC[m[1]]+delta)%12+12)%12]+m[2]}).join(' / ')}
 function exerciseName(d,key){let name=d.name.replace(/Key [^｜]+/,'Key '+key);return name===d.name&&!name.includes('Key ')?name+'｜Key '+key:name}
 function firstPosition(d,delta){const fp=d.firstPosition;if(!fp)return null;const midi=fp.midi+delta,same={string:fp.string,fret:fp.fret+delta};if(same.fret>=0&&same.fret<=24)return{midi,...same};let choices=[];for(let s=1;s<=6;s++){let fret=midi-TUNE[s];if(fret>=0&&fret<=24)choices.push({midi,string:s,fret,score:Math.abs(fret-fp.fret)+Math.abs(s-fp.string)*2})}choices.sort((a,b)=>a.score-b.score);return choices[0]||null}
 function showFirstPosition(d,delta){const pos=firstPosition(d,delta);if(!pos){$('firstPos').style.display='none';return}let name=N[((pos.midi%12)+12)%12]+(Math.floor(pos.midi/12)-1);$('firstPos').textContent='最初の1音：'+name+'｜'+pos.string+'弦 '+pos.fret+'フレット';$('firstPos').style.display=page===0&&idx===0?'block':'none'}
