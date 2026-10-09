@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f3">
+<title>Two-Point Shapes クイズ | Guitar Fretboard Trainer</title>
+<style>
+:root{--bg:#f5f5f3;--ink:#202328;--muted:#707783;--blue:#147eea;--border:#d8dce1;--green:#189653;--red:#cf3e47}
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);line-height:1.5}
+.container{max-width:1020px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0}
+h1{font-size:clamp(20px,5vw,26px);line-height:1.2;margin:0}
+small,.muted{color:var(--muted)}
+a{color:#147eea}
+.back{text-decoration:none;border:1px solid var(--border);background:white;padding:7px 12px;border-radius:9px;font-size:14px;font-weight:650}
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin:10px 0}
+.config{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+label{display:block;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:5px}
+select,button{font:inherit}
+select{border:1px solid #bdc6d0;background:white;border-radius:9px;width:100%;padding:10px 8px;min-height:44px;color:var(--ink)}
+.switch{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink);margin-top:12px}
+.switch input{width:18px;height:18px}
+.controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+button{border:1px solid var(--border);background:white;color:#1578d8;min-height:44px;border-radius:10px;padding:8px 16px;font-weight:700;cursor:pointer}
+button.primary{background:#252a2f;color:white;border-color:#252a2f}
+button:disabled{opacity:.45;cursor:default}
+.kicker{font-weight:700;color:var(--muted);font-size:13px}
+.question{font-size:clamp(22px,5vw,31px);font-weight:800;line-height:1.3;margin:6px 0}
+.question em{font-style:normal;color:#136fd0}
+.desc{font-size:14px;color:var(--muted)}
+.boardwrap{overflow-x:auto;touch-action:pan-x;border:1px solid var(--border);border-radius:12px;background:#fff}
+svg{display:block;width:100%;min-width:340px;height:auto;user-select:none;touch-action:manipulation}
+.boardcell{cursor:pointer}
+.boardcell:focus{outline:none}
+.result{font-size:16px;min-height:48px;padding:10px 12px;border-radius:10px;background:#f1f3f5;margin:12px 0;color:#343a40;font-weight:600}
+.result.good{background:#e6f7ea;color:#12663b}
+.result.bad{background:#ffecee;color:#ac2635}
+.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:#576170;margin:8px 0 12px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:100%;vertical-align:middle;margin-right:5px;background:#2b7ef1}
+.dot.green{background:#189653}.dot.red{background:#cf3e47}
+summary{cursor:pointer;font-weight:700;padding:8px 0}
+details .detail{font-size:14px;color:#525b65;padding-bottom:9px}
+@media(max-width:650px){.config{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:12px}.back{font-size:13px;padding:6px 9px}.question{font-size:22px}}
+</style>
+</head>
+<body><div class="container">
+<header>
+ <div><h1>Two-Point Shapes クイズ</h1><small>Solo / Ultimate Fretboard Visualization · 全52パターン</small></div>
+ <a class="back" href="./index.html">← 元の指板アプリ</a>
+</header>
+<section class="card">
+ <div class="config">
+  <div><label for="rootMode">ルート</label><select id="rootMode"><option value="fixed">固定</option><option value="random">ランダム</option></select></div>
+  <div><label for="key">固定ルート音</label><select id="key"></select></div>
+  <div><label for="degree">出題する度数</label><select id="degree"><option value="all">すべて（52）</option></select></div>
+  <div><label for="direction">方向</label><select id="direction"><option value="all">Ascending＋Descending</option><option value="A">Ascending のみ</option><option value="D">Descending のみ</option></select></div>
+  <div><label for="shapeNum">Shape 番号</label><select id="shapeNum"><option value="all">1・2 両方</option><option value="1">Shape 1</option><option value="2">Shape 2</option></select></div>
+  <div><label for="string">ルートの弦</label><select id="string"><option value="all">毎回ランダム</option><option value="1">1弦</option><option value="2">2弦</option><option value="3">3弦</option><option value="4">4弦</option><option value="5">5弦</option><option value="6">6弦</option></select></div>
+  <div><label for="frets">表示するフレット数</label><select id="frets"><option value="9">9フレット</option><option value="11">11フレット</option><option value="13">13フレット</option></select></div>
+ </div>
+ <label class="switch"><input type="checkbox" id="repeat" checked> 既出問題も含めてランダム出題</label>
+</section>
+<section class="card">
+ <div class="meta"><span class="kicker" id="qIndex">第1問</span><span id="score">正解 0 / 0</span></div>
+ <div class="question" id="question">準備中</div>
+ <div class="desc" id="rootInfo">青い R を基準に、指定されたShapeの位置を指板上でタップしてください。</div>
+ <div class="legend"><span><i class="dot"></i>R（ルート）</span><span><i class="dot green"></i>正解位置</span><span><i class="dot red"></i>誤答位置</span></div>
+ <div class="boardwrap"><svg id="board" viewBox="0 0 900 320" aria-label="ギター指板。問題の度数の位置をタップして回答します。"></svg></div>
+ <div class="result" id="result" role="status" aria-live="polite">正解の位置をタップしてください。</div>
+ <div class="controls">
+  <button class="primary" id="next">次の問題</button><button id="reveal">答えを見る</button><button id="reset">成績をリセット</button>
+ </div>
+</section>
+<details class="card"><summary>クイズのルール・補正について</summary><div class="detail">
+ 同じ度数でも、指定されたAscending / DescendingおよびShape番号の位置が正解です。
+ ルートが3弦と2弦の境界をまたぐときは、通常の完全4度チューニングとは1フレット違う位置になるので、自動補正しています。
+ ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
+ Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 2として扱います。
+</div></details>
+<div class="muted" style="font-size:12px;margin:12px 0 24px">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1010-2point01</div>
+</div>
+<script>
+"use strict";
+const OPEN=[64,59,55,50,45,40]; // 1弦～6弦（MIDI）
+const NAMES=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
+const DEG_NAMES=["△3","P5","△7","m3","♭5","m7","△2","P4","△6","m2","♯2","♯4","♯5","m6","P8","♭♭7"];
+const RAW_SHAPES=[["△3","A",1,0,4],["△3","A",2,-1,-1],["△3","D",1,1,-3],["△3","D",2,2,2],["P5","A",1,-1,2],["P5","A",2,-2,-3],["P5","D",1,1,0],["△7","A",1,-2,1],["△7","D",1,0,-1],["△7","D",2,1,4],["m3","A",1,0,3],["m3","A",2,-1,-2],["m3","D",1,1,-4],["m3","D",2,2,1],["♭5","A",1,-1,1],["♭5","D",1,1,-1],["m7","A",1,-2,0],["m7","D",1,0,-2],["m7","D",2,1,3],["△2","A",1,0,2],["△2","A",2,-1,-3],["△2","D",1,2,0],["P4","A",1,-1,0],["P4","D",1,1,-2],["P4","D",2,2,3],["△6","A",1,-1,4],["△6","A",2,-2,-1],["△6","D",1,1,2],["△6","D",2,0,-3],["m2","A",1,0,1],["m2","A",2,-1,-4],["m2","D",1,2,-1],["♯2","A",1,0,3],["♯2","A",2,-1,-2],["♯2","D",1,1,-4],["♯2","D",2,2,1],["♯4","A",1,-1,1],["♯4","D",1,1,-1],["♯5","A",1,-1,3],["♯5","A",2,-2,-2],["♯5","D",1,0,-4],["♯5","D",2,1,1],["m6","A",1,-1,3],["m6","A",2,-2,-2],["m6","D",1,0,-4],["m6","D",2,1,1],["P8","A",1,-2,2],["P8","D",2,3,3],["♭♭7","A",1,-1,4],["♭♭7","A",2,-2,-1],["♭♭7","D",1,1,2],["♭♭7","D",2,0,-3]];
+const SHAPES=RAW_SHAPES.map((r,i)=>({id:i,degree:r[0],direction:r[1],num:r[2],stringShift:r[3],fretShift:r[4],semitones:r[4]-5*r[3]}));
+const $=id=>document.getElementById(id);
+let current=null, answered=false, tried=null, correct=0, attempts=0, count=0, used=new Set();
+const intRand=n=>Math.floor(Math.random()*n);
+function targetFor(shape,rootString,rootFret){
+ const targetString=rootString+shape.stringShift;
+ if(targetString<1||targetString>6)return null;
+ const fretOffset=shape.semitones-(OPEN[targetString-1]-OPEN[rootString-1]);
+ const targetFret=rootFret+fretOffset;
+ if(targetFret<0||targetFret>24)return null;
+ return {s:targetString,f:targetFret,offset:fretOffset};
+}
+function candidatesFor(shape){
+ const rootMode=$("rootMode").value, key=NAMES.indexOf($("key").value), chosenString=$("string").value;
+ const out=[];
+ for(let s=1;s<=6;s++){
+  if(chosenString!=="all"&&s!==Number(chosenString))continue;
+  for(let f=4;f<=18;f++){
+   if(rootMode==="fixed"&&(OPEN[s-1]+f)%12!==key)continue;
+   const target=targetFor(shape,s,f);
+   if(target)out.push({shape,s,f,target,pitch:(OPEN[s-1]+f)%12});
+  }
+ }
+ return out;
+}
+function eligible(){
+ let pool=SHAPES.filter(s=>($("degree").value==="all"||s.degree===$("degree").value)&&($("direction").value==="all"||s.direction===$("direction").value)&&($("shapeNum").value==="all"||String(s.num)===$("shapeNum").value));
+ return pool.filter(s=>candidatesFor(s).length>0);
+}
+function nextQuestion(){
+ let pool=eligible();
+ if(!pool.length){current=null;$("question").textContent="この条件では出題できません";$("result").textContent="弦やShapeの設定を変更してください。";$("board").innerHTML="";return}
+ if(!$("repeat").checked){
+  let rest=pool.filter(s=>!used.has(s.id));
+  if(rest.length)pool=rest;else used.clear();
+ }
+ const shape=pool[intRand(pool.length)], anchors=candidatesFor(shape);
+ current=anchors[intRand(anchors.length)];
+ used.add(shape.id);answered=false;tried=null;count++;
+ const title=shape.degree+" — "+(shape.direction==="A"?"Ascending":"Descending")+" Shape "+shape.num;
+ $("question").innerHTML="<em>"+title+"</em> の場所は？";
+ $("rootInfo").textContent="青い R を基準に、正しい位置をタップしてください。ルート："+NAMES[current.pitch]+"（"+current.s+"弦 "+current.f+"F）";
+ $("qIndex").textContent="第"+count+"問"; $("result").className="result";$("result").textContent="正解の位置をタップしてください。";
+ $("reveal").disabled=false;
+ showBoard();
+}
+function choose(s,f){
+ if(!current||answered)return;
+ answered=true;tried={s,f};attempts++;
+ const ok=s===current.target.s&&f===current.target.f;
+ if(ok)correct++;
+ $("score").textContent="正解 "+correct+" / "+attempts;
+ $("result").className="result "+(ok?"good":"bad");
+ $("result").textContent=(ok?"正解！":"不正解。")+" 正しい位置は "+current.target.s+"弦 "+current.target.f+"フレット（Rから"+(current.target.offset>=0?"+":"")+current.target.offset+"F、弦移動 "+current.shape.stringShift+"）です。";
+ $("reveal").disabled=true;showBoard();
+}
+function reveal(){
+ if(!current||answered)return;
+ answered=true;tried=null;$("reveal").disabled=true;
+ $("result").className="result";$("result").textContent="正解は "+current.target.s+"弦 "+current.target.f+"フレットです。";
+ showBoard();
+}
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+function showBoard(){
+ if(!current)return;
+ const start=Math.max(0,Math.min(24-Number($("frets").value)+1,Math.min(current.f,current.target.f)-2));
+ const end=Math.min(24,start+Number($("frets").value)-1);
+ const left=60,right=876,top=68,bottom=292,width=right-left,cell=width/(end-start+1),row=(bottom-top)/5;
+ let buf=[];
+ buf.push('<rect x="0" y="0" width="900" height="320" fill="#fff"/>');
+ // フレット番号
+ for(let f=start;f<=end;f++){
+  const x=left+(f-start+.5)*cell;
+  buf.push('<text x="'+x+'" y="32" text-anchor="middle" fill="#69717a" font-size="18">'+f+'F</text>');
+  if([3,5,7,9,12,15,17,19,21,24].includes(f)){
+   const dotX=x;
+   if(f===12||f===24){
+    buf.push('<circle cx="'+dotX+'" cy="157" r="9" fill="#e5e8ec"/><circle cx="'+dotX+'" cy="204" r="9" fill="#e5e8ec"/>');
+   }else buf.push('<circle cx="'+dotX+'" cy="180" r="9" fill="#e5e8ec"/>');
+  }
+ }
+ // 縦のフレット線
+ for(let j=0;j<=end-start+1;j++){
+  const x=left+j*cell;
+  buf.push('<line x1="'+x+'" y1="'+top+'" x2="'+x+'" y2="'+bottom+'" stroke="'+(start===0&&j===0?"#272b30":"#999da1")+'" stroke-width="'+(start===0&&j===0?10:3)+'"/>');
+ }
+ for(let s=1;s<=6;s++){
+  const y=top+(s-1)*row;
+  buf.push('<line x1="'+left+'" y1="'+y+'" x2="'+right+'" y2="'+y+'" stroke="#626c75" stroke-width="'+(1+(s-1)*.3)+'"/>');
+  buf.push('<text x="20" y="'+(y+5)+'" fill="#444a51" font-size="15" text-anchor="middle">'+s+'</text>');
+ }
+ // タップ判定：各弦×各フレット
+ for(let s=1;s<=6;s++)for(let f=start;f<=end;f++){
+  const x=left+(f-start)*cell,y=top+(s-1)*row-row/2;
+  buf.push('<rect class="boardcell" data-s="'+s+'" data-f="'+f+'" tabindex="0" role="button" aria-label="'+s+'弦 '+f+'フレット" x="'+x+'" y="'+y+'" width="'+cell+'" height="'+row+'" fill="transparent"/>');
+ }
+ function marker(s,f,color,label){
+  if(f<start||f>end)return;
+  const x=left+(f-start+.5)*cell,y=top+(s-1)*row;
+  buf.push('<circle cx="'+x+'" cy="'+y+'" r="19" fill="'+color+'" stroke="white" stroke-width="2" pointer-events="none"/>');
+  buf.push('<text x="'+x+'" y="'+(y+5)+'" font-size="16" font-weight="800" fill="white" text-anchor="middle" pointer-events="none">'+esc(label)+'</text>');
+ }
+ marker(current.s,current.f,"#2679e4","R");
+ if(answered){
+  if(tried&&(tried.s!==current.target.s||tried.f!==current.target.f))marker(tried.s,tried.f,"#cf3e47","×");
+  marker(current.target.s,current.target.f,"#189653",current.shape.degree);
+ }
+ $("board").innerHTML=buf.join("");
+ $("board").querySelectorAll(".boardcell").forEach(el=>{
+  const action=()=>choose(Number(el.dataset.s),Number(el.dataset.f));
+  el.addEventListener("click",action);
+  el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();action()}});
+ });
+}
+for(const name of NAMES){const o=new Option(name,name);$("key").add(o)}
+$("key").value="C";
+for(const degree of DEG_NAMES){$("degree").add(new Option(degree,degree))}
+$("rootMode").onchange=()=>{$("key").disabled=$("rootMode").value==="random";nextQuestion()};
+for(const id of ["key","degree","direction","shapeNum","string","frets","repeat"])$(id).addEventListener("change",nextQuestion);
+$("next").onclick=nextQuestion;$("reveal").onclick=reveal;
+$("reset").onclick=()=>{correct=0;attempts=0;count=0;used.clear();$("score").textContent="正解 0 / 0";nextQuestion()};
+nextQuestion();
+</script></body></html>
