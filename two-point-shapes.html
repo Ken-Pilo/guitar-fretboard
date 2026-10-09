@@ -166,7 +166,18 @@ const DEG_NAMES=["△3","P5","△7","m3","♭5","m7","△2","P4","△6","m2","�
 const RAW_SHAPES=[["△3","A",1,0,4],["△3","A",2,-1,-1],["△3","D",1,1,-3],["△3","D",2,2,2],["P5","A",1,-1,2],["P5","A",2,-2,-3],["P5","D",1,1,0],["△7","A",1,-2,1],["△7","D",1,0,-1],["△7","D",2,1,4],["m3","A",1,0,3],["m3","A",2,-1,-2],["m3","D",1,1,-4],["m3","D",2,2,1],["♭5","A",1,-1,1],["♭5","D",1,1,-1],["m7","A",1,-2,0],["m7","D",1,0,-2],["m7","D",2,1,3],["△2","A",1,0,2],["△2","A",2,-1,-3],["△2","D",1,2,0],["P4","A",1,-1,0],["P4","D",1,1,-2],["P4","D",2,2,3],["△6","A",1,-1,4],["△6","A",2,-2,-1],["△6","D",1,1,2],["△6","D",2,0,-3],["m2","A",1,0,1],["m2","A",2,-1,-4],["m2","D",1,2,-1],["♯2","A",1,0,3],["♯2","A",2,-1,-2],["♯2","D",1,1,-4],["♯2","D",2,2,1],["♯4","A",1,-1,1],["♯4","D",1,1,-1],["♯5","A",1,-1,3],["♯5","A",2,-2,-2],["♯5","D",1,0,-4],["♯5","D",2,1,1],["m6","A",1,-1,3],["m6","A",2,-2,-2],["m6","D",1,0,-4],["m6","D",2,1,1],["P8","A",1,-2,2],["P8","D",1,3,3],["♭♭7","A",1,-1,4],["♭♭7","A",2,-2,-1],["♭♭7","D",1,1,2],["♭♭7","D",2,0,-3]];
 const SHAPES=RAW_SHAPES.map((r,i)=>({id:i,degree:r[0],direction:r[1],num:r[2],stringShift:r[3],fretShift:r[4],semitones:r[4]-5*r[3]}));
 const $=id=>document.getElementById(id);
-let current=null, answered=false, tried=null, correct=0, attempts=0, count=0, used=new Set();
+let current=null, answered=false, tried=null, tapKind=null, correct=0, attempts=0, alternateCount=0, count=0, used=new Set();
+const DEGREE_AT_SEMITONE=["R","m2（♭9）","△2（9）","m3（♯9）","△3","P4（11）","♭5（♯11）","P5","m6（♯5／♭13）","△6（13／♭♭7）","m7","△7"];
+function updateScore(){$("score").textContent="正解 "+correct+" / "+attempts+" ・ 別Shape "+alternateCount;}
+function pitchClass(n){return ((n%12)+12)%12;}
+function noteInfo(s,f){const pitch=OPEN[s-1]+f,rel=pitchClass(pitch-current.pitch);return {note:NAMES[pitchClass(pitch)],degree:DEGREE_AT_SEMITONE[rel]};}
+function alternativeShapeAt(s,f){
+ return SHAPES.find(shape=>{
+  if(shape.degree!==current.shape.degree||shape.direction!==current.shape.direction||shape.num===current.shape.num)return false;
+  const target=targetFor(shape,current.s,current.f);
+  return target&&target.s===s&&target.f===f;
+ });
+}
 const intRand=n=>Math.floor(Math.random()*n);
 function targetFor(shape,rootString,rootFret){
  const targetString=rootString+shape.stringShift;
@@ -203,28 +214,42 @@ function nextQuestion(){
  }
  const shape=pool[intRand(pool.length)], anchors=candidatesFor(shape);
  current=anchors[intRand(anchors.length)];
- used.add(shape.id);answered=false;tried=null;count++;
+ used.add(shape.id);answered=false;tried=null;tapKind=null;count++;
  const title=shape.degree+" — "+(shape.direction==="A"?"Ascending":"Descending")+" Shape "+shape.num;
  $("question").innerHTML="<em>"+title+"</em> の場所は？";
  $("rootInfo").textContent="青い R を基準に、正しい位置をタップしてください。ルート："+NAMES[current.pitch]+"（"+current.s+"弦 "+current.f+"F）";
- $("qIndex").textContent="第"+count+"問"; $("result").className="result";$("result").textContent="正解の位置をタップしてください。";
+ $("qIndex").textContent="第"+count+"問"; $("result").className="result";$("result").textContent="正解の位置をタップしてください。";$("tapDetail").textContent="タップした位置：—";
  $("reveal").disabled=false;
  showBoard();
 }
 function choose(s,f){
  if(!current||answered)return;
- answered=true;tried={s,f};attempts++;
+ answered=true;tried={s,f};
+ const note=noteInfo(s,f);
+ $("tapDetail").textContent="タップ： "+s+"弦 "+f+"F　｜　音名 "+note.note+"　｜　度数 "+note.degree;
+ const correctPos=current.target.s+"弦 "+current.target.f+"F";
  const ok=s===current.target.s&&f===current.target.f;
- if(ok)correct++;
- $("score").textContent="正解 "+correct+" / "+attempts;
- $("result").className="result "+(ok?"good":"bad");
- $("result").textContent=(ok?"正解！":"不正解。")+" 正しい位置は "+current.target.s+"弦 "+current.target.f+"フレット（Rから"+(current.target.offset>=0?"+":"")+current.target.offset+"F、弦移動 "+current.shape.stringShift+"）です。";
- $("reveal").disabled=true;showBoard();
+ const alternative=ok?null:alternativeShapeAt(s,f);
+ if(ok){
+  tapKind="correct";correct++;attempts++;
+  $("result").className="result good";
+  $("result").textContent="正解！ 指定のShape "+current.shape.num+"です。正解位置： "+correctPos+"。";
+ }else if(alternative){
+  tapKind="alternate";alternateCount++;
+  $("result").className="result alternate";
+  $("result").textContent="形は合っています！ ここは同じ"+current.shape.degree+"の「"+(alternative.direction==="A"?"Ascending":"Descending")+" Shape "+alternative.num+"」です。今回の指定はShape "+current.shape.num+"。緑がその正解位置（"+correctPos+"）です。";
+ }else{
+  tapKind="wrong";attempts++;
+  $("result").className="result bad";
+  $("result").textContent="指定のShapeとは異なる位置です。タップした度数は "+note.degree+"。緑が正解位置（"+correctPos+"）です。";
+ }
+ updateScore();$("reveal").disabled=true;showBoard();
 }
 function reveal(){
  if(!current||answered)return;
- answered=true;tried=null;$("reveal").disabled=true;
- $("result").className="result";$("result").textContent="正解は "+current.target.s+"弦 "+current.target.f+"フレットです。";
+ answered=true;tried=null;tapKind=null;$("reveal").disabled=true;
+ $("result").className="result";$("result").textContent="正解位置： "+current.target.s+"弦 "+current.target.f+"F（"+current.shape.degree+" / "+(current.shape.direction==="A"?"Ascending":"Descending")+" Shape "+current.shape.num+"）。";
+ $("tapDetail").textContent="タップした位置：—（答えを表示中）";
  showBoard();
 }
 const Y=[24,89,154,219,284,349];
@@ -260,7 +285,9 @@ function showBoard(){
     cell.classList.add("show");bubble.classList.add("R");bubble.textContent="R";
    }
    if(answered&&tried&&tried.s===s+1&&tried.f===f&&(tried.s!==current.target.s||tried.f!==current.target.f)){
-    cell.classList.add("reveal","tp-wrong");bubble.textContent="×";
+    cell.classList.add("reveal",tapKind==="alternate"?"tp-alternate":"tp-wrong");
+    const alt=tapKind==="alternate"?alternativeShapeAt(s+1,f):null;
+    bubble.textContent=alt?"S"+alt.num:"×";
    }
    if(answered&&current.target.s===s+1&&current.target.f===f){
     cell.classList.add("reveal","tp-answer");bubble.textContent=current.shape.degree;
@@ -268,10 +295,23 @@ function showBoard(){
    cell.append(bubble);cell.addEventListener("click",()=>choose(s+1,f));board.append(cell);
   }
  });
- // 元アプリと同じ横長の指板を保ち、毎回ルート付近が見える位置へ移動
- const center=(current.f+current.target.f)/2;
- const centerX=18+25+(center-.5)*fw;
- scroll.scrollLeft=Math.max(0,centerX-scroll.clientWidth*.46);
+ // ルートの場所を常に画面中央へ。左右余白を増やすことで端のフレットも中央にする
+ centerRoot();
+ requestAnimationFrame(centerRoot);
+}
+function centerRoot(){
+ if(!current)return;
+ const scroll=$("quizBoardScroll"),stage=$("quizBoardStage"),board=$("quizBoard");
+ const zoom=Number.parseFloat(getComputedStyle(stage).zoom)||1;
+ const gutter=Math.ceil(scroll.clientWidth/(2*zoom));
+ stage.style.paddingLeft=gutter+"px";
+ stage.style.paddingRight=gutter+"px";
+ const rootCell=board.querySelector('.cell[data-string="'+current.s+'"][data-fret="'+current.f+'"]');
+ if(!rootCell)return;
+ const cellBox=rootCell.getBoundingClientRect(),scrollBox=scroll.getBoundingClientRect();
+ const x=cellBox.left-scrollBox.left+scroll.scrollLeft+cellBox.width/2;
+ const goal=Math.max(0,x-scroll.clientWidth/2);
+ scroll.scrollLeft=Math.min(goal,Math.max(0,scroll.scrollWidth-scroll.clientWidth));
 }
 function applySize(v){
  document.body.classList.remove("ipad","iphone","iphone-small","large");
@@ -286,7 +326,7 @@ for(const id of ["key","degree","direction","shapeNum","string","frets","repeat"
 $("next").onclick=nextQuestion;$("reveal").onclick=reveal;
 $("size").onchange=()=>{applySize($("size").value);showBoard()};
 window.addEventListener("resize",()=>{if($("size").value==="auto"){applySize("auto");showBoard()}});
-$("reset").onclick=()=>{correct=0;attempts=0;count=0;used.clear();$("score").textContent="正解 0 / 0";nextQuestion()};
+$("reset").onclick=()=>{correct=0;attempts=0;alternateCount=0;count=0;used.clear();updateScore();nextQuestion()};
 applySize($("size").value);
 nextQuestion();
 </script></body></html>
