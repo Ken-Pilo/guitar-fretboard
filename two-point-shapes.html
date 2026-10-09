@@ -149,7 +149,7 @@ body.large .boardScroll{zoom:1.18}
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1010-2point02</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1010-2point03</div>
 </main>
 <script>
 "use strict";
@@ -262,10 +262,9 @@ function showBoard(){
   }
  });
  // 元アプリと同じ横長の指板を保ち、毎回ルート付近が見える位置へ移動
- const scale=scroll.getBoundingClientRect().width / Math.max(scroll.offsetWidth,1);
  const center=(current.f+current.target.f)/2;
  const centerX=18+25+(center-.5)*fw;
- scroll.scrollLeft=Math.max(0,centerX*scale-scroll.clientWidth*.46);
+ scroll.scrollLeft=Math.max(0,centerX-scroll.clientWidth*.46);
 }
 function applySize(v){
  document.body.classList.remove("ipad","iphone","iphone-small","large");
