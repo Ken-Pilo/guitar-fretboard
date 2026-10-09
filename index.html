@@ -517,6 +517,9 @@ function sizing(){ applySize(size ? size.value : "auto"); }
 drawBoard("practiceArea","practiceBoard");
 addEventListener("resize",()=>{ if(!size || size.value==="auto") sizing(); });
 sizing();
+// Two-Point画面から戻る際、通常クイズのタブを正しく開く
+const initialTab=document.querySelector('.tab[data-page="'+location.hash.slice(1)+'"]');
+if(initialTab)initialTab.click();
 </script>
 </body>
 </html>
