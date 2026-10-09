@@ -40,7 +40,9 @@ main{padding:14px;max-width:1070px;margin:auto}
 .question em{font-style:normal;color:#136fd0}
 .desc{font-size:13px;color:var(--muted)}
 .meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px}
-.boardScroll{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}
+.boardScroll{width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;overscroll-behavior-x:contain}
+.boardStage{display:flex;align-items:flex-start;width:max-content;min-height:395px;box-sizing:content-box}
+#quizArea{margin:0;flex-shrink:0}
 .area{position:relative;margin:auto;height:445px}
 .board{position:absolute;left:18px;top:6px;height:382px;background:#fff;border-right:2px solid #444}
 .nut{position:absolute;left:0;top:0;width:25px;background:linear-gradient(90deg,#1e1f21,#555,#1e1f21);border-radius:8px;z-index:6}
@@ -57,20 +59,24 @@ main{padding:14px;max-width:1070px;margin:auto}
 .R{background:var(--cyan)}
 .cell.tp-answer .bubble{background:#b0e8bf;outline:3px solid var(--ok)}
 .cell.tp-wrong .bubble{background:#ffbcbc;outline:3px solid var(--ng)}
+.cell.tp-alternate .bubble{background:#ffe2a6;outline:3px solid #d9951f;color:#63430e}
 .legend{display:flex;flex-wrap:wrap;gap:13px;font-size:12px;color:#576170;margin:8px 0 4px}
 .dot{display:inline-block;width:12px;height:12px;border-radius:100%;vertical-align:middle;margin-right:5px;background:var(--cyan)}
 .dot.green{background:#b0e8bf;outline:1px solid var(--ok)}
 .dot.red{background:#ffbcbc;outline:1px solid var(--ng)}
+.dot.amber{background:#ffe2a6;outline:1px solid #d9951f}
+.result.alternate{background:#fff3d7;color:#805318}
+.tapDetail{font-size:13px;color:#353b44;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;min-height:38px;margin:-2px 0 10px;line-height:1.5}
 .result{font-size:14px;min-height:42px;padding:9px 11px;border-radius:9px;background:#f1f3f5;margin:10px 0;color:#343a40;font-weight:650}
 .result.good{background:#e6f7ea;color:#12663b}
 .result.bad{background:#ffecee;color:#ac2635}
 summary{cursor:pointer;font-weight:700;padding:6px 0}
 details .detail{font-size:14px;color:#525b65;padding-bottom:9px;line-height:1.6}
 .footer{font-size:11px;color:var(--muted);margin:14px 0 24px}
-body.ipad .boardScroll{zoom:1.04}
-body.iphone .boardScroll{zoom:.72}
-body.iphone-small .boardScroll{zoom:.58}
-body.large .boardScroll{zoom:1.18}
+body.ipad .boardStage{zoom:1.04}
+body.iphone .boardStage{zoom:.72}
+body.iphone-small .boardStage{zoom:.58}
+body.large .boardStage{zoom:1.18}
 @media(max-width:760px){
  header{padding:7px 8px}
  .headrow{flex-wrap:nowrap;gap:5px}
@@ -88,7 +94,7 @@ body.large .boardScroll{zoom:1.18}
  .question{font-size:20px}
  .meta{font-size:12px}
  .desc{font-size:12px}
- .boardScroll{padding:6px}
+ .boardScroll{padding:6px;max-width:100%}
  .legend{gap:10px}
  .featureTitle{font-size:17px}
 }
@@ -133,23 +139,24 @@ body.large .boardScroll{zoom:1.18}
  <label class="switch"><input type="checkbox" id="repeat" checked> 既出問題も含めてランダム出題</label>
 </section>
 <section class="card">
- <div class="meta"><span class="kicker" id="qIndex">第1問</span><span id="score">正解 0 / 0</span></div>
+ <div class="meta"><span class="kicker" id="qIndex">第1問</span><span id="score">正解 0 / 0 ・ 別Shape 0</span></div>
  <div class="question" id="question">準備中</div>
  <div class="desc" id="rootInfo">青い R を基準に、指定されたShapeの位置を指板上でタップしてください。</div>
- <div class="legend"><span><i class="dot"></i>R（ルート）</span><span><i class="dot green"></i>正解位置</span><span><i class="dot red"></i>誤答位置</span></div>
- <div class="boardScroll" id="quizBoardScroll"><div id="quizArea" class="area"><div id="quizBoard" class="board" aria-label="ギター指板。青いRを基準に正解の位置をタップしてください。"></div></div></div>
+ <div class="legend"><span><i class="dot"></i>R（ルート）</span><span><i class="dot green"></i>正解位置</span><span><i class="dot amber"></i>別のShape</span><span><i class="dot red"></i>誤答位置</span></div>
+ <div class="boardScroll" id="quizBoardScroll"><div id="quizBoardStage" class="boardStage"><div id="quizArea" class="area"><div id="quizBoard" class="board" aria-label="ギター指板。青いRを基準に正解の位置をタップしてください。"></div></div></div></div>
  <div class="result" id="result" role="status" aria-live="polite">正解の位置をタップしてください。</div>
+ <div class="tapDetail" id="tapDetail" role="status" aria-live="polite">タップした位置：—</div>
  <div class="controls">
   <button class="primary" id="next">次の問題</button><button id="reveal">答えを見る</button><button id="reset">成績をリセット</button>
  </div>
 </section>
 <details class="card"><summary>クイズのルール・補正について</summary><div class="detail">
- 同じ度数でも、指定されたAscending / DescendingおよびShape番号の位置が正解です。
+ 同じ度数でも、指定されたAscending / DescendingおよびShape番号の位置が正解です。別のShape番号でも度数と方向が一致すれば間違い扱いにせず黄色で案内します。
  ルートが3弦と2弦の境界をまたぐときは、通常の完全4度チューニングとは1フレット違う位置になるので、自動補正しています。
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1010-2point03</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1010-2point04</div>
 </main>
 <script>
 "use strict";
