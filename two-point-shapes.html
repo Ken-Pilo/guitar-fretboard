@@ -6,51 +6,120 @@
 <meta name="theme-color" content="#f5f5f3">
 <title>Two-Point Shapes クイズ | Guitar Fretboard Trainer</title>
 <style>
-:root{--bg:#f5f5f3;--ink:#202328;--muted:#707783;--blue:#147eea;--border:#d8dce1;--green:#189653;--red:#cf3e47}
-*{box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom);line-height:1.5}
-.container{max-width:1020px;margin:0 auto}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0}
-h1{font-size:clamp(20px,5vw,26px);line-height:1.2;margin:0}
-small,.muted{color:var(--muted)}
-a{color:#147eea}
-.back{text-decoration:none;border:1px solid var(--border);background:white;padding:7px 12px;border-radius:9px;font-size:14px;font-weight:650}
-.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin:10px 0}
+
+:root{--bg:#f5f5f3;--card:#fff;--ink:#202328;--muted:#737980;--line:#dcdfe2;--dark:#2d3136;--ok:#238636;--ng:#cf222e;--cyan:#7dd4de}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--ink)}
+button,select,input{font:inherit}
+body{padding-bottom:env(safe-area-inset-bottom)}
+header{background:#fff;border-bottom:1px solid var(--line);padding:10px 14px;position:sticky;top:0;z-index:40}
+.headrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.head-spacer{flex:1}
+.tabs{display:flex;background:#eee;border-radius:10px;padding:3px}
+.tabs a{border:0;background:transparent;padding:9px 16px;border-radius:8px;font-weight:700;text-decoration:none;color:#147eea;white-space:nowrap}
+.tabs a.active{background:#fff;box-shadow:0 1px 4px #0002;color:#202328}
+.top-mini{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.topControl{display:flex;align-items:center;gap:4px}
+.topControl span{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
+select{height:40px;border:1px solid #ccd0d4;background:#fff;border-radius:8px;padding:0 10px;color:var(--ink)}
+main{padding:14px;max-width:1070px;margin:auto}
+.featureTitle{font-size:20px;font-weight:800;margin:1px 0 4px}
+.featureSub{color:var(--muted);font-size:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}
 .config{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-label{display:block;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:5px}
-select,button{font:inherit}
-select{border:1px solid #bdc6d0;background:white;border-radius:9px;width:100%;padding:10px 8px;min-height:44px;color:var(--ink)}
-.switch{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink);margin-top:12px}
+.config label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:0 0 4px 2px}
+.config select{width:100%;min-width:0}
+.switch{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-top:12px}
 .switch input{width:18px;height:18px}
 .controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-button{border:1px solid var(--border);background:white;color:#1578d8;min-height:44px;border-radius:10px;padding:8px 16px;font-weight:700;cursor:pointer}
-button.primary{background:#252a2f;color:white;border-color:#252a2f}
-button:disabled{opacity:.45;cursor:default}
+.controls button{border:1px solid #ccd0d4;background:#fff;color:#1578d8;min-height:40px;border-radius:9px;padding:8px 14px;font-weight:700;cursor:pointer}
+.controls .primary{background:var(--dark);color:#fff;border-color:var(--dark)}
+.controls button:disabled{opacity:.45;cursor:default}
 .kicker{font-weight:700;color:var(--muted);font-size:13px}
-.question{font-size:clamp(22px,5vw,31px);font-weight:800;line-height:1.3;margin:6px 0}
+.question{font-size:clamp(20px,4.5vw,27px);font-weight:800;line-height:1.3;margin:5px 0}
 .question em{font-style:normal;color:#136fd0}
-.desc{font-size:14px;color:var(--muted)}
-.boardwrap{overflow-x:auto;touch-action:pan-x;border:1px solid var(--border);border-radius:12px;background:#fff}
-svg{display:block;width:100%;min-width:340px;height:auto;user-select:none;touch-action:manipulation}
-.boardcell{cursor:pointer}
-.boardcell:focus{outline:none}
-.result{font-size:16px;min-height:48px;padding:10px 12px;border-radius:10px;background:#f1f3f5;margin:12px 0;color:#343a40;font-weight:600}
+.desc{font-size:13px;color:var(--muted)}
+.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px}
+.boardScroll{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}
+.area{position:relative;margin:auto;height:445px}
+.board{position:absolute;left:18px;top:6px;height:382px;background:#fff;border-right:2px solid #444}
+.nut{position:absolute;left:0;top:0;width:25px;background:linear-gradient(90deg,#1e1f21,#555,#1e1f21);border-radius:8px;z-index:6}
+.fret{position:absolute;top:0;width:4px;background:linear-gradient(90deg,#666,#ddd,#666);z-index:14}
+.string{position:absolute;background:#3f4245;z-index:15;min-height:3px}
+.wound{background:repeating-linear-gradient(90deg,#777 0 3px,#e2e2e2 3px 5px,#777 5px 8px)}
+.slabel{position:absolute;left:0;transform:translateY(-50%);font-size:17px;font-weight:800}
+.slabel small{font-size:11px;color:#555;margin-right:5px}
+.mark{position:absolute;width:17px;height:17px;border-radius:50%;background:#cdd2d5;transform:translate(-50%,-50%);z-index:1}
+.fnum{position:absolute;top:397px;transform:translateX(-50%);font-size:12px}
+.cell{position:absolute;border:0;background:transparent;z-index:20;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.bubble{min-width:38px;height:38px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;opacity:0;transition:.1s}
+.cell.show .bubble,.cell.hit .bubble,.cell.reveal .bubble{opacity:1}
+.R{background:var(--cyan)}
+.cell.tp-answer .bubble{background:#b0e8bf;outline:3px solid var(--ok)}
+.cell.tp-wrong .bubble{background:#ffbcbc;outline:3px solid var(--ng)}
+.legend{display:flex;flex-wrap:wrap;gap:13px;font-size:12px;color:#576170;margin:8px 0 4px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:100%;vertical-align:middle;margin-right:5px;background:var(--cyan)}
+.dot.green{background:#b0e8bf;outline:1px solid var(--ok)}
+.dot.red{background:#ffbcbc;outline:1px solid var(--ng)}
+.result{font-size:14px;min-height:42px;padding:9px 11px;border-radius:9px;background:#f1f3f5;margin:10px 0;color:#343a40;font-weight:650}
 .result.good{background:#e6f7ea;color:#12663b}
 .result.bad{background:#ffecee;color:#ac2635}
-.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px}
-.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:#576170;margin:8px 0 12px}
-.dot{display:inline-block;width:12px;height:12px;border-radius:100%;vertical-align:middle;margin-right:5px;background:#2b7ef1}
-.dot.green{background:#189653}.dot.red{background:#cf3e47}
-summary{cursor:pointer;font-weight:700;padding:8px 0}
-details .detail{font-size:14px;color:#525b65;padding-bottom:9px}
-@media(max-width:650px){.config{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:12px}.back{font-size:13px;padding:6px 9px}.question{font-size:22px}}
+summary{cursor:pointer;font-weight:700;padding:6px 0}
+details .detail{font-size:14px;color:#525b65;padding-bottom:9px;line-height:1.6}
+.footer{font-size:11px;color:var(--muted);margin:14px 0 24px}
+body.ipad .boardScroll{zoom:1.04}
+body.iphone .boardScroll{zoom:.72}
+body.iphone-small .boardScroll{zoom:.58}
+body.large .boardScroll{zoom:1.18}
+@media(max-width:760px){
+ header{padding:7px 8px}
+ .headrow{flex-wrap:nowrap;gap:5px}
+ .head-spacer{display:none}
+ .tabs a{padding:6px 7px;font-size:11px}
+ .top-mini{display:flex;flex:0 0 auto;margin-left:auto;flex-wrap:nowrap;gap:4px}
+ .topControl{gap:2px}
+ .topControl span{font-size:9px}
+ .top-mini select{height:29px;font-size:10px;padding:0 4px;max-width:112px}
+ main{padding:6px}
+ .config{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .config label{font-size:10px}
+ .config select{height:36px;font-size:12px;padding:0 7px}
+ .card{padding:9px;margin:7px 0}
+ .question{font-size:20px}
+ .meta{font-size:12px}
+ .desc{font-size:12px}
+ .boardScroll{padding:6px}
+ .legend{gap:10px}
+ .featureTitle{font-size:17px}
+}
+
 </style>
 </head>
-<body><div class="container">
+<body>
 <header>
- <div><h1>Two-Point Shapes クイズ</h1><small>Solo / Ultimate Fretboard Visualization · 全52パターン</small></div>
- <a class="back" href="./index.html">← 元の指板アプリ</a>
+  <div class="headrow">
+    <div class="tabs">
+      <a href="./index.html">練習</a>
+      <a href="./index.html#quiz">クイズ</a>
+      <a href="./two-point-shapes.html" class="active" aria-current="page">Two-Point</a>
+    </div>
+    <div class="head-spacer"></div>
+    <div class="top-mini">
+      <div class="topControl"><span>画面サイズ</span>
+        <select id="size" aria-label="画面サイズ">
+          <option value="auto">自動</option>
+          <option value="ipad">iPad</option>
+          <option value="iphone">iPhone</option>
+          <option value="iphone-small">iPhone 小</option>
+          <option value="large">大きく</option>
+        </select>
+      </div>
+    </div>
+  </div>
 </header>
+<main>
+<h1 class="featureTitle">Two-Point Shapes クイズ</h1>
+<div class="featureSub">Solo / Ultimate Fretboard Visualization · 全52パターン</div>
 <section class="card">
  <div class="config">
   <div><label for="rootMode">ルート</label><select id="rootMode"><option value="fixed">固定</option><option value="random">ランダム</option></select></div>
@@ -59,7 +128,7 @@ details .detail{font-size:14px;color:#525b65;padding-bottom:9px}
   <div><label for="direction">方向</label><select id="direction"><option value="all">Ascending＋Descending</option><option value="A">Ascending のみ</option><option value="D">Descending のみ</option></select></div>
   <div><label for="shapeNum">Shape 番号</label><select id="shapeNum"><option value="all">1・2 両方</option><option value="1">Shape 1</option><option value="2">Shape 2</option></select></div>
   <div><label for="string">ルートの弦</label><select id="string"><option value="all">毎回ランダム</option><option value="1">1弦</option><option value="2">2弦</option><option value="3">3弦</option><option value="4">4弦</option><option value="5">5弦</option><option value="6">6弦</option></select></div>
-  <div><label for="frets">表示するフレット数</label><select id="frets"><option value="9">9フレット</option><option value="11">11フレット</option><option value="13">13フレット</option></select></div>
+  <div><label for="frets">フレット</label><select id="frets"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
  </div>
  <label class="switch"><input type="checkbox" id="repeat" checked> 既出問題も含めてランダム出題</label>
 </section>
@@ -68,7 +137,7 @@ details .detail{font-size:14px;color:#525b65;padding-bottom:9px}
  <div class="question" id="question">準備中</div>
  <div class="desc" id="rootInfo">青い R を基準に、指定されたShapeの位置を指板上でタップしてください。</div>
  <div class="legend"><span><i class="dot"></i>R（ルート）</span><span><i class="dot green"></i>正解位置</span><span><i class="dot red"></i>誤答位置</span></div>
- <div class="boardwrap"><svg id="board" viewBox="0 0 900 320" aria-label="ギター指板。問題の度数の位置をタップして回答します。"></svg></div>
+ <div class="boardScroll" id="quizBoardScroll"><div id="quizArea" class="area"><div id="quizBoard" class="board" aria-label="ギター指板。青いRを基準に正解の位置をタップしてください。"></div></div></div>
  <div class="result" id="result" role="status" aria-live="polite">正解の位置をタップしてください。</div>
  <div class="controls">
   <button class="primary" id="next">次の問題</button><button id="reveal">答えを見る</button><button id="reset">成績をリセット</button>
@@ -80,8 +149,8 @@ details .detail{font-size:14px;color:#525b65;padding-bottom:9px}
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
 </div></details>
-<div class="muted" style="font-size:12px;margin:12px 0 24px">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1010-2point01</div>
-</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1010-2point02</div>
+</main>
 <script>
 "use strict";
 const OPEN=[64,59,55,50,45,40]; // 1弦～6弦（MIDI）
@@ -105,10 +174,11 @@ function candidatesFor(shape){
  const out=[];
  for(let s=1;s<=6;s++){
   if(chosenString!=="all"&&s!==Number(chosenString))continue;
-  for(let f=4;f<=18;f++){
+  const visibleMax=Number($("frets").value);
+  for(let f=4;f<=Math.min(18,visibleMax);f++){
    if(rootMode==="fixed"&&(OPEN[s-1]+f)%12!==key)continue;
    const target=targetFor(shape,s,f);
-   if(target)out.push({shape,s,f,target,pitch:(OPEN[s-1]+f)%12});
+   if(target&&target.f<=visibleMax)out.push({shape,s,f,target,pitch:(OPEN[s-1]+f)%12});
   }
  }
  return out;
@@ -119,7 +189,7 @@ function eligible(){
 }
 function nextQuestion(){
  let pool=eligible();
- if(!pool.length){current=null;$("question").textContent="この条件では出題できません";$("result").textContent="弦やShapeの設定を変更してください。";$("board").innerHTML="";return}
+ if(!pool.length){current=null;$("question").textContent="この条件では出題できません";$("result").textContent="弦やShapeの設定を変更してください。";$("quizBoard").innerHTML="";return}
  if(!$("repeat").checked){
   let rest=pool.filter(s=>!used.has(s.id));
   if(rest.length)pool=rest;else used.clear();
@@ -150,57 +220,57 @@ function reveal(){
  $("result").className="result";$("result").textContent="正解は "+current.target.s+"弦 "+current.target.f+"フレットです。";
  showBoard();
 }
-const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const Y=[24,89,154,219,284,349];
+function mark(board,x,y){
+ const dot=document.createElement("div");dot.className="mark";dot.style.left=x+"px";dot.style.top=y+"px";board.append(dot);
+}
 function showBoard(){
  if(!current)return;
- const start=Math.max(0,Math.min(24-Number($("frets").value)+1,Math.min(current.f,current.target.f)-2));
- const end=Math.min(24,start+Number($("frets").value)-1);
- const left=60,right=876,top=68,bottom=292,width=right-left,cell=width/(end-start+1),row=(bottom-top)/5;
- let buf=[];
- buf.push('<rect x="0" y="0" width="900" height="320" fill="#fff"/>');
- // フレット番号
- for(let f=start;f<=end;f++){
-  const x=left+(f-start+.5)*cell;
-  buf.push('<text x="'+x+'" y="32" text-anchor="middle" fill="#69717a" font-size="18">'+f+'F</text>');
-  if([3,5,7,9,12,15,17,19,21,24].includes(f)){
-   const dotX=x;
-   if(f===12||f===24){
-    buf.push('<circle cx="'+dotX+'" cy="157" r="9" fill="#e5e8ec"/><circle cx="'+dotX+'" cy="204" r="9" fill="#e5e8ec"/>');
-   }else buf.push('<circle cx="'+dotX+'" cy="180" r="9" fill="#e5e8ec"/>');
+ const area=$("quizArea"),board=$("quizBoard"),scroll=$("quizBoardScroll");
+ area.querySelectorAll(".slabel,.fnum").forEach(el=>el.remove());
+ board.innerHTML="";
+ const visibleMax=Number($("frets").value);
+ const W=visibleMax>=24?1400:visibleMax>=15?1000:850, fw=(W-25)/visibleMax;
+ board.style.width=W+"px";board.style.height="382px";
+ area.style.width=(W+30)+"px";area.style.height="395px";
+ const nut=document.createElement("div");nut.className="nut";nut.style.height="382px";board.append(nut);
+ for(let f=1;f<=visibleMax;f++){
+  const d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";d.style.height="382px";board.append(d);
+ }
+ [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>mark(board,25+(f-.5)*fw,186));
+ [12,24].filter(f=>f<=visibleMax).forEach(f=>{mark(board,25+(f-.5)*fw,121);mark(board,25+(f-.5)*fw,251)});
+ Y.forEach((y,s)=>{
+  const wire=document.createElement("div");wire.className="string "+(s>=3?"wound":"");
+  wire.style.top=y+"px";wire.style.left="25px";wire.style.width=(W-25)+"px";wire.style.height=(2+s*.55)+"px";board.append(wire);
+  for(let f=0;f<=visibleMax;f++){
+   const cell=document.createElement("button"),bubble=document.createElement("span");
+   cell.type="button";cell.className="cell";cell.dataset.string=s+1;cell.dataset.fret=f;
+   cell.setAttribute("aria-label",(s+1)+"弦 "+f+"フレット");
+   const x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;
+   cell.style.left=x0+"px";cell.style.top=(y-29)+"px";cell.style.width=(x1-x0)+"px";cell.style.height="58px";
+   bubble.className="bubble";
+   if(s+1===current.s&&f===current.f){
+    cell.classList.add("show");bubble.classList.add("R");bubble.textContent="R";
+   }
+   if(answered&&tried&&tried.s===s+1&&tried.f===f&&(tried.s!==current.target.s||tried.f!==current.target.f)){
+    cell.classList.add("reveal","tp-wrong");bubble.textContent="×";
+   }
+   if(answered&&current.target.s===s+1&&current.target.f===f){
+    cell.classList.add("reveal","tp-answer");bubble.textContent=current.shape.degree;
+   }
+   cell.append(bubble);cell.addEventListener("click",()=>choose(s+1,f));board.append(cell);
   }
- }
- // 縦のフレット線
- for(let j=0;j<=end-start+1;j++){
-  const x=left+j*cell;
-  buf.push('<line x1="'+x+'" y1="'+top+'" x2="'+x+'" y2="'+bottom+'" stroke="'+(start===0&&j===0?"#272b30":"#999da1")+'" stroke-width="'+(start===0&&j===0?10:3)+'"/>');
- }
- for(let s=1;s<=6;s++){
-  const y=top+(s-1)*row;
-  buf.push('<line x1="'+left+'" y1="'+y+'" x2="'+right+'" y2="'+y+'" stroke="#626c75" stroke-width="'+(1+(s-1)*.3)+'"/>');
-  buf.push('<text x="20" y="'+(y+5)+'" fill="#444a51" font-size="15" text-anchor="middle">'+s+'</text>');
- }
- // タップ判定：各弦×各フレット
- for(let s=1;s<=6;s++)for(let f=start;f<=end;f++){
-  const x=left+(f-start)*cell,y=top+(s-1)*row-row/2;
-  buf.push('<rect class="boardcell" data-s="'+s+'" data-f="'+f+'" tabindex="0" role="button" aria-label="'+s+'弦 '+f+'フレット" x="'+x+'" y="'+y+'" width="'+cell+'" height="'+row+'" fill="transparent"/>');
- }
- function marker(s,f,color,label){
-  if(f<start||f>end)return;
-  const x=left+(f-start+.5)*cell,y=top+(s-1)*row;
-  buf.push('<circle cx="'+x+'" cy="'+y+'" r="19" fill="'+color+'" stroke="white" stroke-width="2" pointer-events="none"/>');
-  buf.push('<text x="'+x+'" y="'+(y+5)+'" font-size="16" font-weight="800" fill="white" text-anchor="middle" pointer-events="none">'+esc(label)+'</text>');
- }
- marker(current.s,current.f,"#2679e4","R");
- if(answered){
-  if(tried&&(tried.s!==current.target.s||tried.f!==current.target.f))marker(tried.s,tried.f,"#cf3e47","×");
-  marker(current.target.s,current.target.f,"#189653",current.shape.degree);
- }
- $("board").innerHTML=buf.join("");
- $("board").querySelectorAll(".boardcell").forEach(el=>{
-  const action=()=>choose(Number(el.dataset.s),Number(el.dataset.f));
-  el.addEventListener("click",action);
-  el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();action()}});
  });
+ // 元アプリと同じ横長の指板を保ち、毎回ルート付近が見える位置へ移動
+ const scale=scroll.getBoundingClientRect().width / Math.max(scroll.offsetWidth,1);
+ const center=(current.f+current.target.f)/2;
+ const centerX=18+25+(center-.5)*fw;
+ scroll.scrollLeft=Math.max(0,centerX*scale-scroll.clientWidth*.46);
+}
+function applySize(v){
+ document.body.classList.remove("ipad","iphone","iphone-small","large");
+ if(v==="auto")v=window.innerWidth<700?"iphone-small":"ipad";
+ document.body.classList.add(v);
 }
 for(const name of NAMES){const o=new Option(name,name);$("key").add(o)}
 $("key").value="C";
@@ -208,6 +278,9 @@ for(const degree of DEG_NAMES){$("degree").add(new Option(degree,degree))}
 $("rootMode").onchange=()=>{$("key").disabled=$("rootMode").value==="random";nextQuestion()};
 for(const id of ["key","degree","direction","shapeNum","string","frets","repeat"])$(id).addEventListener("change",nextQuestion);
 $("next").onclick=nextQuestion;$("reveal").onclick=reveal;
+$("size").onchange=()=>{applySize($("size").value);showBoard()};
+window.addEventListener("resize",()=>{if($("size").value==="auto"){applySize("auto");showBoard()}});
 $("reset").onclick=()=>{correct=0;attempts=0;count=0;used.clear();$("score").textContent="正解 0 / 0";nextQuestion()};
+applySize($("size").value);
 nextQuestion();
 </script></body></html>
