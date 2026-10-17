@@ -121,6 +121,9 @@ body.trainer-embed .tapDetail{background:#111;border-color:#333;color:#ddd}
 body.trainer-embed details .detail{color:#ccc}
 body.trainer-embed .footer{color:#777}
 body.trainer-embed .boardScroll{background:#fff}
+.embedSizeBar{display:none}
+body.trainer-embed .embedSizeBar{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin:7px 3px 9px;font-size:12px;color:#aaa}
+body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff;width:auto;min-width:105px;height:38px}
 </style>
 </head>
 <body>
@@ -148,6 +151,10 @@ body.trainer-embed .boardScroll{background:#fff}
 <main>
 <h1 class="featureTitle">Two-Point Shapes クイズ</h1>
 <div class="featureSub">Solo / Ultimate Fretboard Visualization · 全52パターン</div>
+<div class="embedSizeBar"><label for="embeddedSize">画面サイズ</label>
+<select id="embeddedSize">
+<option value="auto">自動</option><option value="ipad">iPad</option><option value="iphone">iPhone</option><option value="iphone-small">iPhone 小</option><option value="large">大きく</option>
+</select></div>
 <section class="card">
  <div class="config">
   <div><label for="rootMode">ルート</label><select id="rootMode"><option value="fixed">固定</option><option value="random">ランダム</option></select></div>
@@ -178,7 +185,7 @@ body.trainer-embed .boardScroll{background:#fff}
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-embed</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-embed2</div>
 </main>
 <script>
 "use strict";
@@ -350,6 +357,7 @@ $("size").onchange=()=>{applySize($("size").value);showBoard()};
 window.addEventListener("resize",()=>{if($("size").value==="auto"){applySize("auto");showBoard()}});
 $("reset").onclick=()=>{correct=0;attempts=0;alternateCount=0;count=0;used.clear();updateScore();nextQuestion()};
 if(new URLSearchParams(location.search).get("embed")==="trainer")document.body.classList.add("trainer-embed");
+$("embeddedSize").onchange=()=>{$("size").value=$("embeddedSize").value;applySize($("size").value);showBoard()};
 applySize($("size").value);
 nextQuestion();
 </script></body></html>
