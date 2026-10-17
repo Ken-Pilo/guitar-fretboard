@@ -10,9 +10,12 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 .btn{font-weight:750}
 .song{font-size:20px;font-weight:900}
 .small{font-size:12px;color:#aaa}
-.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:9px}
-.tab{background:#111;color:#aaa;border:1px solid #333;border-radius:12px;padding:11px 3px;font-weight:850;font-size:14px}
+.tabs{display:flex;gap:4px;margin-bottom:9px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:#111;color:#aaa;border:1px solid #333;border-radius:12px;padding:11px 9px;font-weight:850;font-size:14px;flex:1 0 auto;white-space:nowrap;min-width:70px}
 .tab.active{background:#242424;color:#fff;border-color:#666}
+.tp-panel{background:#050505;border:1px solid #333;border-radius:15px;overflow:hidden;padding:4px}
+.tp-frame{width:100%;display:block;height:1180px;background:#050505;border:0;overflow:hidden}
 .view{display:none}
 .view.active{display:block}
 .key{text-align:center;font-size:46px;font-weight:900;line-height:1}
@@ -104,7 +107,7 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 
 </style></head><body><div class="app">
 <div class="p"><div class="row"><div class="song">ギタートレーナー</div><div class="small" style="margin-left:auto">MPM FAST2<br><span style="color:#57b7ff">Track60・PDFコード版 35</span></div></div></div>
-<div class="tabs"><button class="tab active" data-view="mukyudo">無窮動</button><button class="tab" data-view="interval">音程</button><button class="tab" data-view="notehunt">音名</button><button class="tab" data-view="diatonic">コード</button><button class="tab" data-view="accompaniment">伴奏</button><button class="tab" data-view="settings">設定</button></div>
+<div class="tabs"><button class="tab active" data-view="mukyudo">無窮動</button><button class="tab" data-view="interval">音程</button><button class="tab" data-view="notehunt">音名</button><button class="tab" data-view="diatonic">コード</button><button class="tab" data-view="accompaniment">伴奏</button><button class="tab" data-view="twoPoint">Two-Point</button><button class="tab" data-view="settings">設定</button></div>
 <section id="mukyudo" class="view active"><div class="p"><div class="mukyudo-head"><div id="prog" class="prog">1–6–2–5｜Key C｜Ex.01</div><select id="track"></select><div class="key-select-row"><span class="small">練習Key</span><select id="practiceKey"></select></div><div class="mode-toggle"><button id="chordMode" class="btn active">コード基準</button><button id="rootMode" class="btn">Keyルート固定</button></div></div><div id="pg" class="small" style="text-align:center"></div><div id="firstPos" class="first-pos">最初の1音：—</div><div id="key" style="display:none">C</div><div id="degreeBars" class="bars"><div class="bar"><div id="bt1" class="small"></div><div id="c1" class="chord">—</div><div id="b1" class="degs"></div></div><div class="bar"><div id="bt2" class="small"></div><div id="c2" class="chord">—</div><div id="b2" class="degs"></div></div><div id="bridge" class="bridge">→</div></div><div id="staffPanel" class="staff-panel"><div class="staff-title">五線譜＋度数（2小節）</div><svg id="staffSvg" viewBox="0 0 760 180" role="img" aria-label="2小節の五線譜"></svg></div><div class="detect">検出：<b id="noteM">—</b>　Chord:<b id="cdM">—</b></div><div id="mainNav" class="nav"><button id="prev" class="btn">← 前の2小節</button><button id="retry" class="btn">この2小節を<br>やり直す</button><button id="next" class="btn">次の2小節 →</button></div><div id="complete" class="complete"><div class="complete-title">✓ Exercise 完了！</div><div id="completeSub" class="complete-sub"></div><div class="complete-actions"><button id="againTrack" class="btn">このExerciseをもう一度</button><button id="nextTrack" class="btn">次のExerciseへ →</button></div></div></div></section>
 
 <section id="interval" class="view"><div id="ivSetup" class="setup"><div class="setup-card"><div class="title">インターバル・トレーナー</div><div class="setup-row"><div><b>Root</b><div class="small">固定またはランダム</div></div><select id="rootSel"><option value="random">Random</option></select></div><div class="setup-row"><div><b>Rootを先に弾く</b><div class="small">Root → 指定度数の順で判定</div></div><label class="switch"><input id="rootFirst" type="checkbox"></label></div></div>
@@ -116,6 +119,8 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 <section id="diatonic" class="view"><div class="p"><div class="title">ダイアトニック・コード</div><div class="key-select-row"><span class="small">Key</span><select id="diaKey"></select></div><div class="mode-toggle" style="margin-top:7px"><button id="diaTriad" class="btn active">3和音</button><button id="diaSeventh" class="btn">4和音</button></div><div id="diaGrid" class="dia-grid"></div><div class="dia-legend"><span><i class="dia-dot" style="background:#287db5"></i>Tonic</span><span><i class="dia-dot" style="background:#35815a"></i>Subdominant</span><span><i class="dia-dot" style="background:#a64a4a"></i>Dominant</span></div><div class="dia-quiz"><div class="row"><select id="diaQuizType" style="flex:1"><option value="degree">度数 → コード</option><option value="chord">コード → 度数</option></select><div id="diaScore" class="small">0問正解</div></div><div id="diaQuestion" class="dia-question"></div><div id="diaChoices" class="dia-choices"></div><button id="diaNext" class="btn" style="width:100%;margin-top:8px">次の問題</button></div></div></section>
 
 <section id="accompaniment" class="view"><div class="p"><div class="title">伴奏＆ソロ構築</div><select id="accSelect" style="width:100%"></select><div id="accInfo" class="small" style="text-align:center;margin-top:8px"></div><div id="accTarget" class="acc-target"></div><div id="accState" class="small" style="text-align:center">単音はそのまま、コードはまとめて／ばらして弾けます</div><div class="detect">検出：<b id="noteA">—</b></div><div class="nav"><button id="accPrev" class="btn">← 前</button><button id="accRetry" class="btn">やり直し</button><button id="accNext" class="btn">次 →</button></div></div></section>
+
+<section id="twoPoint" class="view"><div class="tp-panel"><iframe id="tpFrame" class="tp-frame" title="Two-Point Shapes 指板クイズ" scrolling="no"></iframe></div></section>
 
 <section id="settings" class="view"><div class="p"><div class="title">ギター入力</div><button id="ib" class="btn" style="width:100%">ギター入力 ON</button><div class="small" style="margin-top:10px">入力デバイス</div><select id="dev" style="width:100%;margin-top:4px" disabled><option>入力ON後に取得</option></select><button id="reconnect" class="btn" style="width:100%;margin-top:6px">選択した入力で再接続</button><div class="small" style="margin-top:7px">入力：<b id="active">—</b> ／ <span id="st">入力OFF</span></div><div id="routeDiag" class="statusbox small">選択入力と実際の入力を照合します</div><div class="title" style="margin-top:16px">THR入力レベル（RMS）</div><div class="meter"><div id="lev" style="width:0"></div></div><div class="statusbox small"><div id="diag">入力待ち</div></div><div class="small" style="margin-top:8px">AudioSession は内部で play-and-record に設定。接続中のstreamは画面切替では切断しません。</div></div></section>
 </div>
@@ -262,8 +267,39 @@ $('accSelect').onchange=()=>{accEx=+$('accSelect').value;accIdx=0;resetAcc()}
 ;$('accRetry').onclick=resetAcc
 ;$('accNext').onclick=()=>{accIdx=Math.min(ACC[accEx].events.length-1,accIdx+1);resetAcc()}
 ;if(ACC.length)renderAcc();
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.view))}
-);
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.view));if(b.dataset.view==='twoPoint')openTwoPoint()});
+const tpFrame=$('tpFrame');
+let tpResizeObserver=null;
+function resizeTwoPoint(){
+ if(!$('twoPoint').classList.contains('active'))return;
+ try{
+  const d=tpFrame.contentDocument,main=d&&d.querySelector('main');
+  if(!main)return;
+  const rect=main.getBoundingClientRect();
+  tpFrame.style.height=Math.max(650,Math.ceil(rect.bottom+26))+'px';
+ }catch(e){tpFrame.style.height='1280px'}
+}
+function openTwoPoint(){
+ if(!tpFrame.dataset.loaded){
+  tpFrame.dataset.loaded='1';
+  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261018';
+ }
+ requestAnimationFrame(resizeTwoPoint);
+}
+tpFrame.addEventListener('load',()=>{
+ try{
+  const d=tpFrame.contentDocument;
+  if(tpResizeObserver)tpResizeObserver.disconnect();
+  if(typeof ResizeObserver!=='undefined'){
+   tpResizeObserver=new ResizeObserver(()=>requestAnimationFrame(resizeTwoPoint));
+   tpResizeObserver.observe(d.querySelector('main')||d.body);
+  }
+  d.addEventListener('click',()=>requestAnimationFrame(resizeTwoPoint));
+  d.addEventListener('change',()=>requestAnimationFrame(resizeTwoPoint));
+ }catch(e){}
+ resizeTwoPoint();
+});
+window.addEventListener('resize',()=>requestAnimationFrame(resizeTwoPoint));
 let stream=null,ctx=null,an=null,buf=null,on=false,loopGeneration=0,lastStable=null,lastStableAt=0,lastResult={hz:0,clarity:0,rms:0,window:4096};
 let noiseFloor=.00020,noiseSamples=[],calibrateUntil=0,noteGateUntil=0,previousRms=0,pluckConsumed=false,lastPluckAt=0,releaseFrames=0
 ;
