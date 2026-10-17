@@ -99,6 +99,28 @@ body.large .boardStage{zoom:1.18}
  .featureTitle{font-size:17px}
 }
 
+/* ギタートレーナー埋め込み表示。独立ページのデザインは変更しない */
+body.trainer-embed{background:#050505;color:#fff}
+body.trainer-embed header{display:none}
+body.trainer-embed main{max-width:100%;padding:3px}
+body.trainer-embed .featureTitle{color:#fff}
+body.trainer-embed .featureSub{color:#aaa}
+body.trainer-embed .card{background:#0d0d0d;border-color:#333;color:#fff}
+body.trainer-embed .config label,
+body.trainer-embed .kicker{color:#aaa}
+body.trainer-embed .config select{background:#181818;border-color:#444;color:#fff}
+body.trainer-embed .switch{color:#eee}
+body.trainer-embed .meta{color:#ccc}
+body.trainer-embed .desc{color:#aaa}
+body.trainer-embed .question{color:#fff}
+body.trainer-embed .legend{color:#c8c8c8}
+body.trainer-embed .controls button{background:#181818;border-color:#555;color:#68bdff}
+body.trainer-embed .controls button.primary{background:#1495f5;border-color:#1495f5;color:#fff}
+body.trainer-embed .result:not(.good):not(.bad):not(.alternate){background:#181818;color:#ddd}
+body.trainer-embed .tapDetail{background:#111;border-color:#333;color:#ddd}
+body.trainer-embed details .detail{color:#ccc}
+body.trainer-embed .footer{color:#777}
+body.trainer-embed .boardScroll{background:#fff}
 </style>
 </head>
 <body>
@@ -156,7 +178,7 @@ body.large .boardStage{zoom:1.18}
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1010-2point04</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-embed</div>
 </main>
 <script>
 "use strict";
@@ -327,6 +349,7 @@ $("next").onclick=nextQuestion;$("reveal").onclick=reveal;
 $("size").onchange=()=>{applySize($("size").value);showBoard()};
 window.addEventListener("resize",()=>{if($("size").value==="auto"){applySize("auto");showBoard()}});
 $("reset").onclick=()=>{correct=0;attempts=0;alternateCount=0;count=0;used.clear();updateScore();nextQuestion()};
+if(new URLSearchParams(location.search).get("embed")==="trainer")document.body.classList.add("trainer-embed");
 applySize($("size").value);
 nextQuestion();
 </script></body></html>
