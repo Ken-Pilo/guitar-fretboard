@@ -204,15 +204,15 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
 </header>
 <main>
 <h1 class="featureTitle">Two-Point Shapes クイズ</h1>
-<div class="featureSub">Solo / Ultimate Fretboard Visualization · 全52パターン</div>
+<div class="featureSub">Solo / Ultimate Fretboard Visualization · 全53パターン</div>
 <div class="studyModes" role="group" aria-label="出題モード">
  <button type="button" id="quizStudy" class="studyMode active" aria-pressed="true">ランダムクイズ</button>
- <button type="button" id="reviewStudy" class="studyMode" aria-pressed="false">全52形を復習</button>
+ <button type="button" id="reviewStudy" class="studyMode" aria-pressed="false">全53形を復習</button>
 </div>
 <div class="studyProgress" id="studyProgress">
- <span id="studyCounter">復習 1 / 52</span>
+ <span id="studyCounter">復習 1 / 53</span>
  <button type="button" id="reviewRestart">最初から復習</button>
- <progress id="studyMeter" value="0" max="52"></progress>
+ <progress id="studyMeter" value="0" max="53"></progress>
 </div>
 <div class="answerModes" role="group" aria-label="回答方法">
   <button type="button" id="tapMode" class="answerMode active" aria-pressed="true">指板をタップ</button>
@@ -232,7 +232,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  <div class="config">
   <div><label for="rootMode">ルート</label><select id="rootMode"><option value="fixed">固定</option><option value="random">ランダム</option></select></div>
   <div><label for="key">固定ルート音</label><select id="key"></select></div>
-  <div><label for="degree">出題する度数</label><select id="degree"><option value="all">すべて（52）</option></select></div>
+  <div><label for="degree">出題する度数</label><select id="degree"><option value="all">すべて（53）</option></select></div>
   <div><label for="direction">方向</label><select id="direction"><option value="all">Ascending＋Descending</option><option value="A">Ascending のみ</option><option value="D">Descending のみ</option></select></div>
   <div><label for="shapeNum">Shape 番号</label><select id="shapeNum"><option value="all">1・2 両方</option><option value="1">Shape 1</option><option value="2">Shape 2</option></select></div>
   <div><label for="string">ルートの弦</label><select id="string"><option value="all">毎回ランダム</option><option value="1">1弦</option><option value="2">2弦</option><option value="3">3弦</option><option value="4">4弦</option><option value="5">5弦</option><option value="6">6弦</option></select></div>
@@ -250,7 +250,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  <div class="result" id="result" role="status" aria-live="polite">正解の位置をタップしてください。</div>
  <div class="tapDetail" id="tapDetail" role="status" aria-live="polite">タップした位置：—</div>
  <div id="advanceInfo" aria-live="polite">次の問題：ボタンをタップ</div>
- <div id="studyFinished" class="studyFinished" role="status">全52形の復習が完了しました！<div style="font-size:13px;font-weight:500;margin-top:7px">「最初から復習」で何度でも確認できます。</div></div>
+ <div id="studyFinished" class="studyFinished" role="status">全53形の復習が完了しました！<div style="font-size:13px;font-weight:500;margin-top:7px">「最初から復習」で何度でも確認できます。</div></div>
  <div class="controls">
   <button class="primary" id="next">次の問題</button><button id="reveal">答えを見る</button><button id="reset">成績をリセット</button>
  </div>
@@ -259,16 +259,16 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  同じ度数でも、指定されたAscending / DescendingおよびShape番号の位置が正解です。別のShape番号でも度数と方向が一致すれば間違い扱いにせず黄色で案内します。
  ルートが3弦と2弦の境界をまたぐときは、通常の完全4度チューニングとは1フレット違う位置になるので、自動補正しています。
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
- Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
+ Shape番号はPDF資料を基本に、△6／♭♭7のShape 1・2を修正。P8には「4弦9F→6弦7F」のDescending Shape 2を追加しています。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-rootzone01</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-p8-53a</div>
 </main>
 <script>
 "use strict";
 const OPEN=[64,59,55,50,45,40]; // 1弦～6弦（MIDI）
 const NAMES=["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
 const DEG_NAMES=["△3","P5","△7","m3","♭5","m7","△2","P4","△6","m2","♯2","♯4","♯5","m6","P8","♭♭7"];
-const RAW_SHAPES=[["△3","A",1,0,4],["△3","A",2,-1,-1],["△3","D",1,1,-3],["△3","D",2,2,2],["P5","A",1,-1,2],["P5","A",2,-2,-3],["P5","D",1,1,0],["△7","A",1,-2,1],["△7","D",1,0,-1],["△7","D",2,1,4],["m3","A",1,0,3],["m3","A",2,-1,-2],["m3","D",1,1,-4],["m3","D",2,2,1],["♭5","A",1,-1,1],["♭5","D",1,1,-1],["m7","A",1,-2,0],["m7","D",1,0,-2],["m7","D",2,1,3],["△2","A",1,0,2],["△2","A",2,-1,-3],["△2","D",1,2,0],["P4","A",1,-1,0],["P4","D",1,1,-2],["P4","D",2,2,3],["△6","A",1,-1,4],["△6","A",2,-2,-1],["△6","D",1,1,2],["△6","D",2,0,-3],["m2","A",1,0,1],["m2","A",2,-1,-4],["m2","D",1,2,-1],["♯2","A",1,0,3],["♯2","A",2,-1,-2],["♯2","D",1,1,-4],["♯2","D",2,2,1],["♯4","A",1,-1,1],["♯4","D",1,1,-1],["♯5","A",1,-1,3],["♯5","A",2,-2,-2],["♯5","D",1,0,-4],["♯5","D",2,1,1],["m6","A",1,-1,3],["m6","A",2,-2,-2],["m6","D",1,0,-4],["m6","D",2,1,1],["P8","A",1,-2,2],["P8","D",1,3,3],["♭♭7","A",1,-1,4],["♭♭7","A",2,-2,-1],["♭♭7","D",1,1,2],["♭♭7","D",2,0,-3]];
+const RAW_SHAPES=[["△3","A",1,0,4],["△3","A",2,-1,-1],["△3","D",1,1,-3],["△3","D",2,2,2],["P5","A",1,-1,2],["P5","A",2,-2,-3],["P5","D",1,1,0],["△7","A",1,-2,1],["△7","D",1,0,-1],["△7","D",2,1,4],["m3","A",1,0,3],["m3","A",2,-1,-2],["m3","D",1,1,-4],["m3","D",2,2,1],["♭5","A",1,-1,1],["♭5","D",1,1,-1],["m7","A",1,-2,0],["m7","D",1,0,-2],["m7","D",2,1,3],["△2","A",1,0,2],["△2","A",2,-1,-3],["△2","D",1,2,0],["P4","A",1,-1,0],["P4","D",1,1,-2],["P4","D",2,2,3],["△6","A",1,-2,-1],["△6","A",2,-1,4],["△6","D",1,0,-3],["△6","D",2,1,2],["m2","A",1,0,1],["m2","A",2,-1,-4],["m2","D",1,2,-1],["♯2","A",1,0,3],["♯2","A",2,-1,-2],["♯2","D",1,1,-4],["♯2","D",2,2,1],["♯4","A",1,-1,1],["♯4","D",1,1,-1],["♯5","A",1,-1,3],["♯5","A",2,-2,-2],["♯5","D",1,0,-4],["♯5","D",2,1,1],["m6","A",1,-1,3],["m6","A",2,-2,-2],["m6","D",1,0,-4],["m6","D",2,1,1],["P8","A",1,-2,2],["P8","D",1,3,3],["P8","D",2,2,-2],["♭♭7","A",1,-2,-1],["♭♭7","A",2,-1,4],["♭♭7","D",1,0,-3],["♭♭7","D",2,1,2]];
 const SHAPES=RAW_SHAPES.map((r,i)=>({id:i,degree:r[0],direction:r[1],num:r[2],stringShift:r[3],fretShift:r[4],semitones:r[4]-5*r[3]}));
 const $=id=>document.getElementById(id);
 let current=null, answered=false, tried=null, tapKind=null, correct=0, attempts=0, alternateCount=0, pitchOnly=0, count=0, used=new Set();
@@ -305,8 +305,9 @@ function scheduleAdvance(){
 function updateReviewProgress(){
  const active=studyMode==="review";
  $("studyProgress").classList.toggle("active",active);
- $("studyCounter").textContent=reviewFinished?"52 / 52　すべて復習済み":"復習 "+Math.min(52,reviewIndex+1)+" / 52";
- $("studyMeter").value=reviewFinished?52:reviewIndex;
+ $("studyCounter").textContent=reviewFinished?SHAPES.length+" / "+SHAPES.length+"　すべて復習済み":"復習 "+Math.min(SHAPES.length,reviewIndex+1)+" / "+SHAPES.length;
+ $("studyMeter").max=SHAPES.length;
+ $("studyMeter").value=reviewFinished?SHAPES.length:reviewIndex;
  $("reviewStudy").classList.toggle("active",active);
  $("quizStudy").classList.toggle("active",!active);
  $("reviewStudy").setAttribute("aria-pressed",String(active));
@@ -321,10 +322,10 @@ function setStudyMode(mode){
 }
 function finishReview(){
  cancelAdvance();reviewFinished=true;answered=true;
- $("studyFinished").classList.add("show");$("qIndex").textContent="復習完了 52 / 52";
+ $("studyFinished").classList.add("show");$("qIndex").textContent="復習完了 "+SHAPES.length+" / "+SHAPES.length;
  $("next").disabled=true;$("reveal").disabled=true;
  $("result").className="result good";
- $("result").textContent="全52形を最初から最後まで確認しました。";
+ $("result").textContent="全"+SHAPES.length+"形を最初から最後まで確認しました。";
  updateReviewProgress();showAdvanceInfo();
 }
 const DEGREE_AT_SEMITONE=["R","m2（♭9）","△2（9）","m3（♯9）","△3","P4（11）","♭5（♯11）","P5","m6（♯5／♭13）","△6（13／♭♭7）","m7","△7"];
