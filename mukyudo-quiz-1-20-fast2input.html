@@ -300,7 +300,7 @@ function resizeTwoPoint(){
 function openTwoPoint(){
  if(!tpFrame.dataset.loaded){
   tpFrame.dataset.loaded='1';
-  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261018';
+  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261018-play02';
  }
  requestAnimationFrame(resizeTwoPoint);
 }
@@ -378,6 +378,8 @@ $('againTrack').onclick=()=>{page=0;idx=0;loadM()}
 ;$('nextTrack').onclick=()=>{tr=Math.min(Object.keys(DATA).length,tr+1);track.value=String(tr);page=0;$('practiceKey').value=cur().key;loadM()}
 ;
 if(navigator.mediaDevices&&'ondevicechange' in navigator.mediaDevices)navigator.mediaDevices.ondevicechange=()=>{if(!stream)list('')}
-;track.value='1';loadM();}
+;track.value='1';loadM();
+const initialView=document.querySelector('.tab[data-view="'+location.hash.slice(1)+'"]');
+if(initialView)initialView.click();}
 )();
 </script></body></html>
