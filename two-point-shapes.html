@@ -26,6 +26,22 @@ main{padding:14px;max-width:1070px;margin:auto}
 .featureTitle{font-size:20px;font-weight:800;margin:1px 0 4px}
 .featureSub{color:var(--muted);font-size:12px}
 .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}
+.studyModes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0}
+.studyMode{min-height:42px;padding:8px;font-weight:800;border:1px solid #ccd0d4;background:#f7f8fa;color:#4e5762;border-radius:9px;cursor:pointer}
+.studyMode.active{background:#1d596e;color:#fff;border-color:#1d596e}
+.studyProgress{display:none;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:750;font-size:13px;padding:10px;border:1px solid #a2bdcb;border-radius:10px;background:#f0f8fc;margin:7px 0}
+.studyProgress.active{display:flex}
+.studyProgress button{padding:6px 10px;min-height:36px;border:1px solid #90b5cc;border-radius:8px;background:#fff;color:#225d86;font-weight:750}
+#studyMeter{display:block;width:100%;height:7px;accent-color:#1f88c5}
+#advanceInfo{font-weight:650;color:#576170;font-size:12px;margin:7px 0}
+.studyFinished{display:none;margin:9px 0;padding:14px;border:2px solid #247caf;border-radius:12px;background:#e9f7ff;color:#174965;text-align:center;font-size:18px;font-weight:850}
+.studyFinished.show{display:block}
+body.trainer-embed .studyMode{background:#191919;color:#ccc;border-color:#444}
+body.trainer-embed .studyMode.active{background:#166d96;color:#fff}
+body.trainer-embed .studyProgress{background:#0a2430;color:#d4eefd;border-color:#315c71}
+body.trainer-embed .studyProgress button{background:#1a3443;border-color:#345d73;color:#8bdbff}
+body.trainer-embed #advanceInfo{color:#bbb}
+body.trainer-embed .studyFinished{background:#082c3d;color:#91d9ff;border-color:#2680a7}
 .answerModes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:9px 0}
 .answerMode{font-size:16px;font-weight:800;border-radius:10px;border:1px solid #ccd0d4;background:#f6f7f8;color:#646b74;min-height:46px;cursor:pointer}
 .answerMode.active{color:#fff;background:#2679e4;border-color:#2679e4}
@@ -166,6 +182,15 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
 <main>
 <h1 class="featureTitle">Two-Point Shapes クイズ</h1>
 <div class="featureSub">Solo / Ultimate Fretboard Visualization · 全52パターン</div>
+<div class="studyModes" role="group" aria-label="出題モード">
+ <button type="button" id="quizStudy" class="studyMode active" aria-pressed="true">ランダムクイズ</button>
+ <button type="button" id="reviewStudy" class="studyMode" aria-pressed="false">全52形を復習</button>
+</div>
+<div class="studyProgress" id="studyProgress">
+ <span id="studyCounter">復習 1 / 52</span>
+ <button type="button" id="reviewRestart">最初から復習</button>
+ <progress id="studyMeter" value="0" max="52"></progress>
+</div>
 <div class="answerModes" role="group" aria-label="回答方法">
   <button type="button" id="tapMode" class="answerMode active" aria-pressed="true">指板をタップ</button>
   <button type="button" id="playMode" class="answerMode" aria-pressed="false">ギターを弾く</button>
@@ -200,6 +225,8 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  <div class="boardScroll" id="quizBoardScroll"><div id="quizBoardStage" class="boardStage"><div id="quizArea" class="area"><div id="quizBoard" class="board" aria-label="ギター指板。青いRを基準に正解の位置をタップしてください。"></div></div></div></div>
  <div class="result" id="result" role="status" aria-live="polite">正解の位置をタップしてください。</div>
  <div class="tapDetail" id="tapDetail" role="status" aria-live="polite">タップした位置：—</div>
+ <div id="advanceInfo" aria-live="polite">次の問題：ボタンをタップ</div>
+ <div id="studyFinished" class="studyFinished" role="status">全52形の復習が完了しました！<div style="font-size:13px;font-weight:500;margin-top:7px">「最初から復習」で何度でも確認できます。</div></div>
  <div class="controls">
   <button class="primary" id="next">次の問題</button><button id="reveal">答えを見る</button><button id="reset">成績をリセット</button>
  </div>
