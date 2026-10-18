@@ -327,7 +327,7 @@ function resizeTwoPoint(){
 function openTwoPoint(){
  if(!tpFrame.dataset.loaded){
   tpFrame.dataset.loaded='1';
-  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261018-review02';
+  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261018-highfreq01';
  }
  requestAnimationFrame(resizeTwoPoint);
 }
@@ -370,7 +370,7 @@ catch(e){$('diag').textContent=e.message}
 }
 $('reconnect').onclick=async()=>{try{await connect($('dev').value)}catch(e){$('routeDiag').textContent='再接続失敗：'+e.message}}
 
-function mpm(x,sr){let n=x.length,min=Math.max(2,Math.floor(sr/700)),max=Math.min(Math.floor(sr/70),Math.floor(n/2)),diff=new Float32Array(max+1),cmnd=new Float32Array(max+1);for(let tau=1;tau<=max;tau++){let sum=0,lim=n-tau;for(let i=0;i<lim;i++){let d=x[i]-x[i+tau];sum+=d*d}
+function mpm(x,sr){let n=x.length,min=Math.max(2,Math.floor(sr/1450)),max=Math.min(Math.floor(sr/70),Math.floor(n/2)),diff=new Float32Array(max+1),cmnd=new Float32Array(max+1);for(let tau=1;tau<=max;tau++){let sum=0,lim=n-tau;for(let i=0;i<lim;i++){let d=x[i]-x[i+tau];sum+=d*d}
 diff[tau]=sum}
 let run=0;cmnd[0]=1;for(let tau=1;tau<=max;tau++){run+=diff[tau];cmnd[tau]=run?diff[tau]*tau/run:1}
 let tau=0,threshold=.15;for(let t=min;t<max;t++){if(cmnd[t]<threshold){while(t+1<=max&&cmnd[t+1]<cmnd[t])t++;tau=t;break}
