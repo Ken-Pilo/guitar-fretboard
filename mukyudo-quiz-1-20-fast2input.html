@@ -126,7 +126,19 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 
 <section id="twoPoint" class="view"><div class="tp-audio"><button id="tpInputBtn" class="btn" type="button">ギター入力 ON</button><span id="tpInputStatus">既存のギター入力と共有します。演奏モードで使うときにONにしてください。</span></div><div class="tp-panel"><iframe id="tpFrame" class="tp-frame" title="Two-Point Shapes 指板クイズ" scrolling="no"></iframe></div></section>
 
-<section id="settings" class="view"><div class="p"><div class="title">ギター入力</div><button id="ib" class="btn" style="width:100%">ギター入力 ON</button><div class="small" style="margin-top:10px">入力デバイス</div><select id="dev" style="width:100%;margin-top:4px" disabled><option>入力ON後に取得</option></select><button id="reconnect" class="btn" style="width:100%;margin-top:6px">選択した入力で再接続</button><div class="small" style="margin-top:7px">入力：<b id="active">—</b> ／ <span id="st">入力OFF</span></div><div id="routeDiag" class="statusbox small">選択入力と実際の入力を照合します</div><div class="title" style="margin-top:16px">THR入力レベル（RMS）</div><div class="meter"><div id="lev" style="width:0"></div></div><div class="statusbox small"><div id="diag">入力待ち</div></div><div class="small" style="margin-top:8px">AudioSession は内部で play-and-record に設定。接続中のstreamは画面切替では切断しません。</div></div></section>
+<section id="settings" class="view">
+<div class="p">
+ <div class="title">Two-Point：次の問題への進み方</div>
+ <div class="small" style="margin-bottom:9px">タップモード・演奏モード・全52形復習に共通の設定です。</div>
+ <select id="tpAdvance" aria-label="Two-Point 次の問題への進み方" style="width:100%">
+  <option value="0">次の問題ボタンをタップ</option>
+  <option value="1">回答から1秒後に自動</option>
+  <option value="2">回答から2秒後に自動</option>
+  <option value="3">回答から3秒後に自動</option>
+ </select>
+ <div class="small" style="margin-top:8px">回答したあと、または「答えを見る」を押したあとから計測します。何も答えていない場合は自動では進みません。選択内容は保存されます。</div>
+</div>
+<div class="p"><div class="title">ギター入力</div><button id="ib" class="btn" style="width:100%">ギター入力 ON</button><div class="small" style="margin-top:10px">入力デバイス</div><select id="dev" style="width:100%;margin-top:4px" disabled><option>入力ON後に取得</option></select><button id="reconnect" class="btn" style="width:100%;margin-top:6px">選択した入力で再接続</button><div class="small" style="margin-top:7px">入力：<b id="active">—</b> ／ <span id="st">入力OFF</span></div><div id="routeDiag" class="statusbox small">選択入力と実際の入力を照合します</div><div class="title" style="margin-top:16px">THR入力レベル（RMS）</div><div class="meter"><div id="lev" style="width:0"></div></div><div class="statusbox small"><div id="diag">入力待ち</div></div><div class="small" style="margin-top:8px">AudioSession は内部で play-and-record に設定。接続中のstreamは画面切替では切断しません。</div></div></section>
 </div>
 <script>
 (async()=>{'use strict';const $=id=>document.getElementById(id),N=['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'],NOTE_PC={'C':0,'C♯':1,'D♭':1,'D':2,'D♯':3,'E♭':3,'E':4,'F':5,'F♯':6,'G♭':6,'G':7,'G♯':8,'A♭':8,'A':9,'A♯':10,'B♭':10,'B':11}
@@ -273,6 +285,21 @@ $('accSelect').onchange=()=>{accEx=+$('accSelect').value;accIdx=0;resetAcc()}
 ;if(ACC.length)renderAcc();
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.view));if(b.dataset.view==='twoPoint')openTwoPoint()});
 const tpFrame=$('tpFrame');
+const tpAdvance=$('tpAdvance');
+const tpAdvanceKey='guitarTrainer.twoPoint.advance';
+try{
+ const saved=localStorage.getItem(tpAdvanceKey);
+ if(['0','1','2','3'].includes(saved))tpAdvance.value=saved;
+}catch(e){}
+function sendTpAdvance(){
+ if(tpFrame.contentWindow&&tpFrame.dataset.loaded){
+  tpFrame.contentWindow.postMessage({source:'guitar-trainer',type:'setAdvance',seconds:Number(tpAdvance.value)},location.origin);
+ }
+}
+tpAdvance.onchange=()=>{
+ try{localStorage.setItem(tpAdvanceKey,tpAdvance.value)}catch(e){}
+ sendTpAdvance();
+};
 function tpInputState(){
  const btn=$('tpInputBtn'),status=$('tpInputStatus');
  btn.textContent=on?'ギター入力 OFF':'ギター入力 ON';
@@ -300,7 +327,7 @@ function resizeTwoPoint(){
 function openTwoPoint(){
  if(!tpFrame.dataset.loaded){
   tpFrame.dataset.loaded='1';
-  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261018-play02';
+  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261018-review02';
  }
  requestAnimationFrame(resizeTwoPoint);
 }
@@ -315,7 +342,7 @@ tpFrame.addEventListener('load',()=>{
   d.addEventListener('click',()=>requestAnimationFrame(resizeTwoPoint));
   d.addEventListener('change',()=>requestAnimationFrame(resizeTwoPoint));
  }catch(e){}
- resizeTwoPoint();tpInputState();
+ resizeTwoPoint();tpInputState();sendTpAdvance();
 });
 window.addEventListener('resize',()=>requestAnimationFrame(resizeTwoPoint));
 let stream=null,ctx=null,an=null,buf=null,on=false,loopGeneration=0,lastStable=null,lastStableAt=0,lastResult={hz:0,clarity:0,rms:0,window:4096};
