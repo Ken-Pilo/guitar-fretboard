@@ -16,6 +16,10 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 .tab.active{background:#242424;color:#fff;border-color:#666}
 .tp-panel{background:#050505;border:1px solid #333;border-radius:15px;overflow:hidden;padding:4px}
 .tp-frame{width:100%;display:block;height:1180px;background:#050505;border:0;overflow:hidden}
+.tp-audio{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 4px 12px}
+#tpInputBtn{flex:0 0 auto;background:#102c3f;color:#78c6ff;border-color:#2f6a94}
+#tpInputBtn.on{background:#19522e;color:#a5f3bf;border-color:#41905a}
+#tpInputStatus{font-size:12px;min-width:130px;flex:1;color:#b3b3b3;line-height:1.45}
 .view{display:none}
 .view.active{display:block}
 .key{text-align:center;font-size:46px;font-weight:900;line-height:1}
@@ -120,7 +124,7 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 
 <section id="accompaniment" class="view"><div class="p"><div class="title">伴奏＆ソロ構築</div><select id="accSelect" style="width:100%"></select><div id="accInfo" class="small" style="text-align:center;margin-top:8px"></div><div id="accTarget" class="acc-target"></div><div id="accState" class="small" style="text-align:center">単音はそのまま、コードはまとめて／ばらして弾けます</div><div class="detect">検出：<b id="noteA">—</b></div><div class="nav"><button id="accPrev" class="btn">← 前</button><button id="accRetry" class="btn">やり直し</button><button id="accNext" class="btn">次 →</button></div></div></section>
 
-<section id="twoPoint" class="view"><div class="tp-panel"><iframe id="tpFrame" class="tp-frame" title="Two-Point Shapes 指板クイズ" scrolling="no"></iframe></div></section>
+<section id="twoPoint" class="view"><div class="tp-audio"><button id="tpInputBtn" class="btn" type="button">ギター入力 ON</button><span id="tpInputStatus">既存のギター入力と共有します。演奏モードで使うときにONにしてください。</span></div><div class="tp-panel"><iframe id="tpFrame" class="tp-frame" title="Two-Point Shapes 指板クイズ" scrolling="no"></iframe></div></section>
 
 <section id="settings" class="view"><div class="p"><div class="title">ギター入力</div><button id="ib" class="btn" style="width:100%">ギター入力 ON</button><div class="small" style="margin-top:10px">入力デバイス</div><select id="dev" style="width:100%;margin-top:4px" disabled><option>入力ON後に取得</option></select><button id="reconnect" class="btn" style="width:100%;margin-top:6px">選択した入力で再接続</button><div class="small" style="margin-top:7px">入力：<b id="active">—</b> ／ <span id="st">入力OFF</span></div><div id="routeDiag" class="statusbox small">選択入力と実際の入力を照合します</div><div class="title" style="margin-top:16px">THR入力レベル（RMS）</div><div class="meter"><div id="lev" style="width:0"></div></div><div class="statusbox small"><div id="diag">入力待ち</div></div><div class="small" style="margin-top:8px">AudioSession は内部で play-and-record に設定。接続中のstreamは画面切替では切断しません。</div></div></section>
 </div>
@@ -269,6 +273,20 @@ $('accSelect').onchange=()=>{accEx=+$('accSelect').value;accIdx=0;resetAcc()}
 ;if(ACC.length)renderAcc();
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===b.dataset.view));if(b.dataset.view==='twoPoint')openTwoPoint()});
 const tpFrame=$('tpFrame');
+function tpInputState(){
+ const btn=$('tpInputBtn'),status=$('tpInputStatus');
+ btn.textContent=on?'ギター入力 OFF':'ギター入力 ON';
+ btn.classList.toggle('on',on);
+ status.textContent=on?($('st').textContent==='ノイズ測定中'?'ノイズ測定中。弾かずにお待ちください。':'入力中：音を検出できます'):'入力OFF：タップモードはそのまま利用できます';
+ if(tpFrame.contentWindow&&tpFrame.dataset.loaded)tpFrame.contentWindow.postMessage({source:'guitar-trainer',type:'inputState',on},location.origin);
+}
+$('tpInputBtn').onclick=async()=>{
+ if(on){stop();return}
+ $('tpInputStatus').textContent='入力を接続しています…';
+ try{await connect($('dev').disabled?'':$('dev').value);tpInputState()}
+ catch(e){$('tpInputStatus').textContent='接続エラー：'+e.message;$('st').textContent='入力エラー';tpInputState()}
+};
+
 let tpResizeObserver=null;
 function resizeTwoPoint(){
  if(!$('twoPoint').classList.contains('active'))return;
@@ -297,7 +315,7 @@ tpFrame.addEventListener('load',()=>{
   d.addEventListener('click',()=>requestAnimationFrame(resizeTwoPoint));
   d.addEventListener('change',()=>requestAnimationFrame(resizeTwoPoint));
  }catch(e){}
- resizeTwoPoint();
+ resizeTwoPoint();tpInputState();
 });
 window.addEventListener('resize',()=>requestAnimationFrame(resizeTwoPoint));
 let stream=null,ctx=null,an=null,buf=null,on=false,loopGeneration=0,lastStable=null,lastStableAt=0,lastResult={hz:0,clarity:0,rms:0,window:4096};
@@ -305,7 +323,7 @@ let noiseFloor=.00020,noiseSamples=[],calibrateUntil=0,noteGateUntil=0,previousR
 ;
 async function list(keep){let ins=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');$('dev').innerHTML='';ins.forEach((d,i)=>$('dev').add(new Option(d.label||('入力 '+(i+1)),d.deviceId)));$('dev').disabled=!ins.length;if(keep&&ins.some(d=>d.deviceId===keep))$('dev').value=keep}
 
-function stop(){loopGeneration++;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;if(ctx)ctx.close();ctx=null;an=null;buf=null;on=false;$('ib').textContent='ギター入力 ON';$('st').textContent='入力OFF';$('active').textContent='—';$('lev').style.width='0%'}
+function stop(){loopGeneration++;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;if(ctx)ctx.close();ctx=null;an=null;buf=null;on=false;$('ib').textContent='ギター入力 ON';$('st').textContent='入力OFF';$('active').textContent='—';$('lev').style.width='0%';tpInputState()}
 
 async function connect(id,retry=0){const desired=[...$('dev').options].find(o=>o.value===id)?.textContent||'既定入力';const generation=++loopGeneration;on=false;an=null;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;if(id)await new Promise(r=>setTimeout(r,260));let audio={echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:{ideal:2},sampleRate:{ideal:48000}}
 ;if(id)audio.deviceId={exact:id}
@@ -313,7 +331,7 @@ async function connect(id,retry=0){const desired=[...$('dev').options].find(o=>o
 );const t=stream.getAudioTracks()[0],settings=t.getSettings?t.getSettings():{}
 ;const actual=t.label||'Audio Input',mismatch=!!id&&((settings.deviceId&&settings.deviceId!==id)||(/THR/i.test(desired)&&!/THR/i.test(actual)));$('routeDiag').textContent='選択：'+desired+' ／ 実際：'+actual+' ／ '+(settings.sampleRate||'?')+'Hz ／ '+(settings.channelCount||'?')+'ch'+(mismatch?' ／ 不一致':' ／ 一致')
 ;if(mismatch&&retry<2){stream.getTracks().forEach(x=>x.stop());stream=null;const fresh=(await navigator.mediaDevices.enumerateDevices()).find(x=>x.kind==='audioinput'&&/THR/i.test(x.label));if(fresh){$('routeDiag').textContent+=' → 再接続 '+(retry+1)+'/2';return connect(fresh.deviceId,retry+1)}}
-;if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=16384;src.connect(an);buf=new Float32Array(an.fftSize);noiseFloor=.00020;noiseSamples=[];calibrateUntil=performance.now()+1100;noteGateUntil=0;previousRms=0;pluckConsumed=false;lastPluckAt=0;releaseFrames=0;on=true;$('active').textContent=t.label||'Audio Input';$('st').textContent='ノイズ測定中';$('ib').textContent='ギター入力 OFF';await list(settings.deviceId||id||'');loop(generation)}
+;if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=16384;src.connect(an);buf=new Float32Array(an.fftSize);noiseFloor=.00020;noiseSamples=[];calibrateUntil=performance.now()+1100;noteGateUntil=0;previousRms=0;pluckConsumed=false;lastPluckAt=0;releaseFrames=0;on=true;$('active').textContent=t.label||'Audio Input';$('st').textContent='ノイズ測定中';$('ib').textContent='ギター入力 OFF';await list(settings.deviceId||id||'');tpInputState();loop(generation)}
 
 $('ib').onclick=async()=>{if(on){stop();return}
 try{await connect('')}
@@ -345,6 +363,7 @@ let trigger=Math.max(.00030,noiseFloor*1.55),hold=Math.max(.00018,noiseFloor*1.0
 $('diag').textContent=(freshAccepted?'検出':accepted?'同じピッキング・待機':rms<trigger?'ノイズ・無視':'立ち上がり待ち')+' ／ RMS '+rms.toFixed(5)+' ／ noise '+noiseFloor.toFixed(5)+' ／ threshold '+trigger.toFixed(5)+(r?' ／ clarity '+r.clarity.toFixed(2)+' ／ '+r.hz.toFixed(1)+'Hz':'');requestAnimationFrame(()=>loop(generation))}
 
 function handlePitch(p){const active=document.querySelector('.view.active')?.id;$('noteM').textContent=p.nm;$('noteI').textContent=p.nm;$('noteN').textContent=p.nm;$('noteA').textContent=p.nm;
+if(active==='twoPoint'&&tpFrame.contentWindow&&tpFrame.dataset.loaded){tpFrame.contentWindow.postMessage({source:'guitar-trainer',type:'pitch',midi:p.midi,pc:p.pc,nm:p.nm},location.origin)}
 if(active==='mukyudo'&&seq[idx]){$('cdM').textContent=seq[idx].label;if(p.pc===seq[idx].pc){idx++;if(page===0&&idx>0)$('firstPos').style.display='none';drawDeg('b1',seq.slice(0,split),0);drawDeg('b2',seq.slice(split),split);refreshStaff();if(idx>=seq.length){let maxPage=Math.ceil(cur().bars.length/2)-1;if(page<maxPage){setTimeout(()=>{page++;loadM()}
 ,180)}else{$('cdM').textContent='完了';$('completeSub').textContent=cur().name+'を最後まで演奏しました';$('mainNav').style.display='none';$('complete').classList.add('show');setTimeout(()=>$('complete').scrollIntoView({behavior:'smooth',block:'center'}
 ),80)}}}}
