@@ -68,11 +68,19 @@ body.trainer-embed .livePitch{color:#68bdff}
 .controls button:disabled{opacity:.45;cursor:default}
 .kicker{font-weight:700;color:var(--muted);font-size:13px}
 .question{display:flex;align-items:center;flex-wrap:wrap;gap:5px 9px;font-size:clamp(19px,4.5vw,26px);font-weight:850;line-height:1.2;margin:7px 0}
+.rootHead{display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap;white-space:nowrap;max-width:100%}
+.rootZone{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:5px 8px;border-radius:9px;border:1px solid transparent;font-size:clamp(16px,3vw,20px);font-weight:950;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.rootZone.zoneLower{background:#fff1da;color:#925510;border-color:#dfb674}
+.rootZone.zoneUpper{background:#f0e8ff;color:#62369c;border-color:#b6a0e4}
+.rootZone.zoneEqual{background:#e1f5e8;color:#17653c;border-color:#86c8a1}
 .questionRoot{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:#e5f4ff;color:#175b89;border:1px solid #add2f2;border-radius:9px;padding:7px 9px;font-size:clamp(16px,3.2vw,21px);font-weight:900}
 .questionRoot .rootText{font-size:1.08em}
 .questionShape{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:clamp(21px,4.5vw,29px);font-weight:900;color:#136fd0}
 .questionArrow{font-size:1.18em;color:#e68216}
 .questionAsk{font-size:clamp(16px,3vw,21px);font-weight:800;white-space:nowrap}
+body.trainer-embed .rootZone.zoneLower{background:#422806;color:#ffd79f;border-color:#84551b}
+body.trainer-embed .rootZone.zoneUpper{background:#2c1c48;color:#d9baff;border-color:#694ca2}
+body.trainer-embed .rootZone.zoneEqual{background:#153b2a;color:#b0f0c9;border-color:#327955}
 body.trainer-embed .questionRoot{background:#0a3247;color:#95ddff;border-color:#236a93}
 body.trainer-embed .questionShape{color:#73c5ff}
 body.trainer-embed .questionArrow{color:#ffb35b}
@@ -137,6 +145,8 @@ body.large .boardStage{zoom:1.18}
  .desc{font-size:12px}
  .boardScroll{padding:6px;max-width:100%}
  .question{gap:5px 6px}
+ .rootHead{gap:4px}
+ .rootZone{min-height:38px;font-size:15px;padding:5px 6px}
  .questionRoot{padding:6px 7px}
  .questionShape{letter-spacing:-.35px}
  .legend{gap:10px}
@@ -251,7 +261,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-compact01</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-rootzone01</div>
 </main>
 <script>
 "use strict";
@@ -355,6 +365,11 @@ function eligible(){
  let pool=SHAPES.filter(s=>($("degree").value==="all"||s.degree===$("degree").value)&&($("direction").value==="all"||s.direction===$("direction").value)&&($("shapeNum").value==="all"||String(s.num)===$("shapeNum").value));
  return pool.filter(s=>candidatesFor(s).length>0);
 }
+function fretSide(fret){
+ if(fret<12)return {text:"12F ＞",className:"zoneLower",label:"12フレットより手前"};
+ if(fret>12)return {text:"12F ＜",className:"zoneUpper",label:"12フレットより奥"};
+ return {text:"12F ＝",className:"zoneEqual",label:"12フレットちょうど"};
+}
 function nextQuestion(){
  cancelAdvance();
  if(studyMode==="review"){
@@ -385,8 +400,9 @@ function nextQuestion(){
  if(studyMode==="review"&&Math.max(current.f,current.target.f)>Number($("frets").value))$("frets").value="24";
  used.add(shape.id);answered=false;tried=null;tapKind=null;count++;
  const arrow=shape.direction==="A"?"↑":"↓";
- $("question").innerHTML='<span class="questionRoot">'+current.s+'弦 <span class="rootText">Root：'+NAMES[current.pitch]+'</span></span><span class="questionShape">'+shape.degree+' <span class="questionArrow">'+arrow+'</span> Shape '+shape.num+'</span><span class="questionAsk">の場所は？</span>';
- $("rootInfo").textContent="水色のR（"+current.s+"弦 "+current.f+"F）を基準に、"+(answerMode==="tap"?"指板をタップ":"ギターで演奏")+"してください。"+(usedFallback?" ※復習のため弦・範囲を補正":"");
+ const zone=fretSide(current.f);
+ $("question").innerHTML='<span class="rootHead"><span class="rootZone '+zone.className+'" title="'+zone.label+'" aria-label="'+zone.label+'">'+zone.text+'</span><span class="questionRoot">'+current.s+'弦 <span class="rootText">Root：'+NAMES[current.pitch]+'</span></span></span><span class="questionShape">'+shape.degree+' <span class="questionArrow">'+arrow+'</span> Shape '+shape.num+'</span><span class="questionAsk">の場所は？</span>';
+ $("rootInfo").textContent=zone.label+"／水色のR（"+current.s+"弦 "+current.f+"F）を基準に、"+(answerMode==="tap"?"指板をタップ":"ギターで演奏")+"してください。"+(usedFallback?" ※復習のため弦・範囲を補正":"");
  $("qIndex").textContent=studyMode==="review"?"復習 "+(reviewIndex+1)+" / "+SHAPES.length:"第"+count+"問";
  $("result").className="result";$("result").textContent=answerMode==="tap"?"正解の位置をタップしてください。":"ギターの単音を弾いてください。";
  $("tapDetail").textContent=answerMode==="tap"?"タップした位置：—":"演奏した音：—";
