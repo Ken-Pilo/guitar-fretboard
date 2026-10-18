@@ -67,7 +67,15 @@ body.trainer-embed .livePitch{color:#68bdff}
 .controls .primary{background:var(--dark);color:#fff;border-color:var(--dark)}
 .controls button:disabled{opacity:.45;cursor:default}
 .kicker{font-weight:700;color:var(--muted);font-size:13px}
-.question{font-size:clamp(20px,4.5vw,27px);font-weight:800;line-height:1.3;margin:5px 0}
+.question{display:flex;align-items:center;flex-wrap:wrap;gap:5px 9px;font-size:clamp(19px,4.5vw,26px);font-weight:850;line-height:1.2;margin:7px 0}
+.questionRoot{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:#e5f4ff;color:#175b89;border:1px solid #add2f2;border-radius:9px;padding:7px 9px;font-size:clamp(16px,3.2vw,21px);font-weight:900}
+.questionRoot .rootText{font-size:1.08em}
+.questionShape{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:clamp(21px,4.5vw,29px);font-weight:900;color:#136fd0}
+.questionArrow{font-size:1.18em;color:#e68216}
+.questionAsk{font-size:clamp(16px,3vw,21px);font-weight:800;white-space:nowrap}
+body.trainer-embed .questionRoot{background:#0a3247;color:#95ddff;border-color:#236a93}
+body.trainer-embed .questionShape{color:#73c5ff}
+body.trainer-embed .questionArrow{color:#ffb35b}
 .question em{font-style:normal;color:#136fd0}
 .desc{font-size:13px;color:var(--muted)}
 .meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px}
@@ -88,6 +96,8 @@ body.trainer-embed .livePitch{color:#68bdff}
 .bubble{min-width:38px;height:38px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;opacity:0;transition:.1s}
 .cell.show .bubble,.cell.hit .bubble,.cell.reveal .bubble{opacity:1}
 .R{background:var(--cyan)}
+.cell.is-root .bubble{min-width:47px;height:47px;font-size:20px;font-weight:950;border:3px solid #13628c;box-shadow:0 0 0 4px #5ad7eb44;color:#123b4c}
+.cell.is-root{z-index:22}
 .cell.tp-answer .bubble{background:#b0e8bf;outline:3px solid var(--ok)}
 .cell.tp-wrong .bubble{background:#ffbcbc;outline:3px solid var(--ng)}
 .cell.tp-alternate .bubble{background:#ffe2a6;outline:3px solid #d9951f;color:#63430e}
@@ -126,6 +136,9 @@ body.large .boardStage{zoom:1.18}
  .meta{font-size:12px}
  .desc{font-size:12px}
  .boardScroll{padding:6px;max-width:100%}
+ .question{gap:5px 6px}
+ .questionRoot{padding:6px 7px}
+ .questionShape{letter-spacing:-.35px}
  .legend{gap:10px}
  .featureTitle{font-size:17px}
 }
@@ -214,6 +227,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
   <div><label for="shapeNum">Shape 番号</label><select id="shapeNum"><option value="all">1・2 両方</option><option value="1">Shape 1</option><option value="2">Shape 2</option></select></div>
   <div><label for="string">ルートの弦</label><select id="string"><option value="all">毎回ランダム</option><option value="1">1弦</option><option value="2">2弦</option><option value="3">3弦</option><option value="4">4弦</option><option value="5">5弦</option><option value="6">6弦</option></select></div>
   <div><label for="frets">フレット</label><select id="frets"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
+  <div><label for="tpAdvance">次の問題へ</label><select id="tpAdvance"><option value="0">ボタンで進む</option><option value="1">1秒後</option><option value="2">2秒後</option><option value="3">3秒後</option></select></div>
  </div>
  <label class="switch"><input type="checkbox" id="repeat" checked> 既出問題も含めてランダム出題</label>
 </section>
@@ -237,7 +251,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-highfreq01</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-compact01</div>
 </main>
 <script>
 "use strict";
@@ -257,10 +271,14 @@ function advanceText(){
  return autoAdvance===0?"次の問題：ボタンをタップ":"次の問題：回答後 "+autoAdvance+" 秒で自動";
 }
 function showAdvanceInfo(message){$("advanceInfo").textContent=message||advanceText()}
+const tpAdvanceKey="guitarTrainer.twoPoint.advance";
 function setAdvanceMode(seconds){
  const n=Number(seconds);
  if(![0,1,2,3].includes(n))return;
- autoAdvance=n;cancelAdvance();showAdvanceInfo();
+ autoAdvance=n;
+ $("tpAdvance").value=String(n);
+ try{localStorage.setItem(tpAdvanceKey,String(n))}catch(e){}
+ cancelAdvance();showAdvanceInfo();
  if(answered&&!reviewFinished)scheduleAdvance();
 }
 function scheduleAdvance(){
@@ -366,9 +384,9 @@ function nextQuestion(){
  current=anchors[intRand(anchors.length)];
  if(studyMode==="review"&&Math.max(current.f,current.target.f)>Number($("frets").value))$("frets").value="24";
  used.add(shape.id);answered=false;tried=null;tapKind=null;count++;
- const title=shape.degree+" — "+(shape.direction==="A"?"Ascending":"Descending")+" Shape "+shape.num;
- $("question").innerHTML="<em>"+title+"</em> の場所は？";
- $("rootInfo").textContent="青い R を基準に、"+(answerMode==="tap"?"正しい位置をタップ":"指定の音をギターで演奏")+"してください。ルート："+NAMES[current.pitch]+"（"+current.s+"弦 "+current.f+"F）"+(usedFallback?" ※復習のため弦・範囲を補正":"");
+ const arrow=shape.direction==="A"?"↑":"↓";
+ $("question").innerHTML='<span class="questionRoot">'+current.s+'弦 <span class="rootText">Root：'+NAMES[current.pitch]+'</span></span><span class="questionShape">'+shape.degree+' <span class="questionArrow">'+arrow+'</span> Shape '+shape.num+'</span><span class="questionAsk">の場所は？</span>';
+ $("rootInfo").textContent="水色のR（"+current.s+"弦 "+current.f+"F）を基準に、"+(answerMode==="tap"?"指板をタップ":"ギターで演奏")+"してください。"+(usedFallback?" ※復習のため弦・範囲を補正":"");
  $("qIndex").textContent=studyMode==="review"?"復習 "+(reviewIndex+1)+" / "+SHAPES.length:"第"+count+"問";
  $("result").className="result";$("result").textContent=answerMode==="tap"?"正解の位置をタップしてください。":"ギターの単音を弾いてください。";
  $("tapDetail").textContent=answerMode==="tap"?"タップした位置：—":"演奏した音：—";
@@ -435,7 +453,7 @@ function showBoard(){
    cell.style.left=x0+"px";cell.style.top=(y-29)+"px";cell.style.width=(x1-x0)+"px";cell.style.height="58px";
    bubble.className="bubble";
    if(s+1===current.s&&f===current.f){
-    cell.classList.add("show");bubble.classList.add("R");bubble.textContent="R";
+    cell.classList.add("show","is-root");bubble.classList.add("R");bubble.textContent="R";
    }
    if(answered&&tried&&tried.s===s+1&&tried.f===f&&(tried.s!==current.target.s||tried.f!==current.target.f)){
     cell.classList.add("reveal",tapKind==="alternate"?"tp-alternate":"tp-wrong");
@@ -555,6 +573,7 @@ for(const id of ["key","degree","direction","shapeNum","string","frets","repeat"
 $("quizStudy").onclick=()=>setStudyMode("quiz");
 $("reviewStudy").onclick=()=>setStudyMode("review");
 $("reviewRestart").onclick=()=>setStudyMode("review");
+$("tpAdvance").onchange=()=>setAdvanceMode($("tpAdvance").value);
 $("next").onclick=nextQuestion;$("reveal").onclick=reveal;
 $("size").onchange=()=>{applySize($("size").value);showBoard()};
 window.addEventListener("resize",()=>{if($("size").value==="auto"){applySize("auto");showBoard()}});
@@ -562,5 +581,9 @@ $("reset").onclick=()=>{cancelAdvance();correct=0;attempts=0;alternateCount=0;pi
 if(new URLSearchParams(location.search).get("embed")==="trainer")document.body.classList.add("trainer-embed");
 $("embeddedSize").onchange=()=>{$("size").value=$("embeddedSize").value;applySize($("size").value);showBoard()};
 applySize($("size").value);
+try{
+ const prior=localStorage.getItem(tpAdvanceKey);
+ if(prior!==null)setAdvanceMode(prior);
+}catch(e){}
 nextQuestion();
 </script></body></html>
