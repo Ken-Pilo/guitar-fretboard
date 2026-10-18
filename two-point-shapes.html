@@ -210,7 +210,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料の順序に準拠。オクターブは上方向をAscending 1、下方向をDescending 1として扱います。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-play01</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-play02</div>
 </main>
 <script>
 "use strict";
@@ -428,13 +428,15 @@ window.addEventListener("message",event=>{
 });
 $("tapMode").onclick=()=>setAnswerMode("tap");
 $("playMode").onclick=()=>{
- if(window.parent===window){
-   $("playStatus").textContent="演奏判定にはギタートレーナーから開いてください。";
- }
  setAnswerMode("play");
+ if(window.parent===window){
+   $("playStatus").textContent="演奏判定はギタートレーナーのTwo-Pointタブから使用してください（このページ単体には音声入力を接続していません）。";
+ }
 };
 $("playedString").onchange=()=>{
- if(answerMode==="play")nextQuestion();
+ if(answerMode==="play"){
+  $("playStatus").textContent="弦の指定を変更しました。現在の問題で演奏できます。";
+ }
 };
 
 for(const name of NAMES){const o=new Option(name,name);$("key").add(o)}
