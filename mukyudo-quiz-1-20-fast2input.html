@@ -370,7 +370,7 @@ catch(e){$('diag').textContent=e.message}
 }
 $('reconnect').onclick=async()=>{try{await connect($('dev').value)}catch(e){$('routeDiag').textContent='再接続失敗：'+e.message}}
 
-function mpm(x,sr){let n=x.length,min=Math.max(2,Math.floor(sr/1450)),max=Math.min(Math.floor(sr/70),Math.floor(n/2)),diff=new Float32Array(max+1),cmnd=new Float32Array(max+1);for(let tau=1;tau<=max;tau++){let sum=0,lim=n-tau;for(let i=0;i<lim;i++){let d=x[i]-x[i+tau];sum+=d*d}
+function mpm(x,sr,maxHz=700){let n=x.length,min=Math.max(2,Math.floor(sr/maxHz)),max=Math.min(Math.floor(sr/70),Math.floor(n/2)),diff=new Float32Array(max+1),cmnd=new Float32Array(max+1);for(let tau=1;tau<=max;tau++){let sum=0,lim=n-tau;for(let i=0;i<lim;i++){let d=x[i]-x[i+tau];sum+=d*d}
 diff[tau]=sum}
 let run=0;cmnd[0]=1;for(let tau=1;tau<=max;tau++){run+=diff[tau];cmnd[tau]=run?diff[tau]*tau/run:1}
 let tau=0,threshold=.15;for(let t=min;t<max;t++){if(cmnd[t]<threshold){while(t+1<=max&&cmnd[t+1]<cmnd[t])t++;tau=t;break}
@@ -381,7 +381,7 @@ if(!tau||cmnd[tau]>.70)return null;let better=tau;if(tau>1&&tau<max){let a=cmnd[
 return{hz:sr/better,clarity:1-cmnd[tau]}
 }
 
-function loop(generation){if(generation!==loopGeneration||!on||!an)return;an.getFloatTimeDomainData(buf);let rms=Math.sqrt(buf.reduce((s,v)=>s+v*v,0)/buf.length),w=rms>=.00025?4096:8192,start=buf.length-w,x=buf.slice(start),r=mpm(x,ctx.sampleRate),now=performance.now();lastResult={hz:r?.hz||0,clarity:r?.clarity||0,rms,window:w}
+function loop(generation){if(generation!==loopGeneration||!on||!an)return;an.getFloatTimeDomainData(buf);let rms=Math.sqrt(buf.reduce((s,v)=>s+v*v,0)/buf.length),w=rms>=.00025?4096:8192,start=buf.length-w,x=buf.slice(start),r=mpm(x,ctx.sampleRate,document.querySelector('.view.active')?.id==='twoPoint'?1450:700),now=performance.now();lastResult={hz:r?.hz||0,clarity:r?.clarity||0,rms,window:w}
 ;$('lev').style.width=Math.min(100,rms*15000)+'%';if(now<calibrateUntil){noiseSamples.push(rms);if(noiseSamples.length>180)noiseSamples.shift();$('st').textContent='ノイズ測定中';$('diag').textContent='弦を弾かずにお待ちください ／ RMS '+rms.toFixed(5);previousRms=rms;requestAnimationFrame(()=>loop(generation));return}
 if(noiseSamples.length){let sorted=[...noiseSamples].sort((a,b)=>a-b);noiseFloor=Math.max(.00012,sorted[Math.floor((sorted.length-1)*.85)]||.00020);noiseSamples=[];$('st').textContent='入力中';tpInputState()}
 let trigger=Math.max(.00030,noiseFloor*1.55),hold=Math.max(.00018,noiseFloor*1.08),attack=rms>=trigger&&rms>=Math.max(previousRms*1.02,noiseFloor*1.20);if(rms<hold*.88){releaseFrames++;if(releaseFrames>=2)pluckConsumed=false}else releaseFrames=0;if(attack&&now-lastPluckAt>=70){noteGateUntil=now+1100;pluckConsumed=false;lastPluckAt=now}let gated=now<noteGateUntil&&rms>=hold,accepted=!!(r&&gated&&r.clarity>=.32),freshAccepted=accepted&&!pluckConsumed;previousRms=rms
