@@ -124,7 +124,7 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 
 <section id="accompaniment" class="view"><div class="p"><div class="title">伴奏＆ソロ構築</div><select id="accSelect" style="width:100%"></select><div id="accInfo" class="small" style="text-align:center;margin-top:8px"></div><div id="accTarget" class="acc-target"></div><div id="accState" class="small" style="text-align:center">単音はそのまま、コードはまとめて／ばらして弾けます</div><div class="detect">検出：<b id="noteA">—</b></div><div class="nav"><button id="accPrev" class="btn">← 前</button><button id="accRetry" class="btn">やり直し</button><button id="accNext" class="btn">次 →</button></div></div></section>
 
-<section id="twoPoint" class="view"><div class="tp-audio"><button id="tpInputBtn" class="btn" type="button">ギター入力 ON</button><span id="tpInputStatus">既存のギター入力と共有します。演奏モードで使うときにONにしてください。</span></div><div class="tp-panel"><iframe id="tpFrame" class="tp-frame" title="Two-Point Shapes 指板クイズ" scrolling="no"></iframe></div></section>
+<section id="twoPoint" class="view"><div class="tp-audio"><button id="tpInputBtn" class="btn" type="button">ギター入力 ON</button><span id="tpInputStatus">演奏で回答するか、次問のルートを弾いて進むときにONにしてください。</span></div><div class="tp-panel"><iframe id="tpFrame" class="tp-frame" title="Two-Point Shapes 指板クイズ" scrolling="no"></iframe></div></section>
 
 <section id="settings" class="view"><div class="p"><div class="title">ギター入力</div><button id="ib" class="btn" style="width:100%">ギター入力 ON</button><div class="small" style="margin-top:10px">入力デバイス</div><select id="dev" style="width:100%;margin-top:4px" disabled><option>入力ON後に取得</option></select><button id="reconnect" class="btn" style="width:100%;margin-top:6px">選択した入力で再接続</button><div class="small" style="margin-top:7px">入力：<b id="active">—</b> ／ <span id="st">入力OFF</span></div><div id="routeDiag" class="statusbox small">選択入力と実際の入力を照合します</div><div class="title" style="margin-top:16px">THR入力レベル（RMS）</div><div class="meter"><div id="lev" style="width:0"></div></div><div class="statusbox small"><div id="diag">入力待ち</div></div><div class="small" style="margin-top:8px">AudioSession は内部で play-and-record に設定。接続中のstreamは画面切替では切断しません。</div></div></section>
 </div>
@@ -300,7 +300,7 @@ function resizeTwoPoint(){
 function openTwoPoint(){
  if(!tpFrame.dataset.loaded){
   tpFrame.dataset.loaded='1';
-  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261018-p8-53a';
+  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261123-root-advance';
  }
  requestAnimationFrame(resizeTwoPoint);
 }

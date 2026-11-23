@@ -237,7 +237,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
   <div><label for="shapeNum">Shape 番号</label><select id="shapeNum"><option value="all">1・2 両方</option><option value="1">Shape 1</option><option value="2">Shape 2</option></select></div>
   <div><label for="string">ルートの弦</label><select id="string"><option value="all">毎回ランダム</option><option value="1">1弦</option><option value="2">2弦</option><option value="3">3弦</option><option value="4">4弦</option><option value="5">5弦</option><option value="6">6弦</option></select></div>
   <div><label for="frets">フレット</label><select id="frets"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
-  <div><label for="tpAdvance">次の問題へ</label><select id="tpAdvance"><option value="0">ボタンで進む</option><option value="1">1秒後</option><option value="2">2秒後</option><option value="3">3秒後</option></select></div>
+  <div><label for="tpAdvance">次の問題へ</label><select id="tpAdvance"><option value="0">ボタンで進む</option><option value="root">次問のルートを弾いて進む</option><option value="1">1秒後</option><option value="2">2秒後</option><option value="3">3秒後</option></select></div>
  </div>
  <label class="switch"><input type="checkbox" id="repeat" checked> 既出問題も含めてランダム出題</label>
 </section>
@@ -274,33 +274,53 @@ const $=id=>document.getElementById(id);
 let current=null, answered=false, tried=null, tapKind=null, correct=0, attempts=0, alternateCount=0, pitchOnly=0, count=0, used=new Set();
 let answerMode="tap",inputReady=false;
 let studyMode="quiz",reviewIndex=0,reviewFinished=false;
-let autoAdvance=0,advanceTimer=null;
+let advanceMode="0",advanceTimer=null,nextRootQuestion=null;
+let ignorePitchUntil=0;
 function cancelAdvance(){if(advanceTimer!==null){clearTimeout(advanceTimer);advanceTimer=null}}
+function rootAdvanceText(){
+ if(window.parent===window)return "ルートで進むにはギタートレーナーのTwo-Pointタブを開いてください。";
+ const root=nextRootQuestion;
+ const prompt=root
+  ?"次問のRoot "+NAMES[root.pitch]+"（"+root.s+"弦 "+root.f+"F）を弾いてください。"
+  :"回答後に、次問のルートが表示されます。";
+ return inputReady?prompt:"「ギター入力 ON」を押してください。"+prompt;
+}
 function advanceText(){
  if(reviewFinished)return "復習が完了しました。";
- return autoAdvance===0?"次の問題：ボタンをタップ":"次の問題：回答後 "+autoAdvance+" 秒で自動";
+ if(advanceMode==="root"){
+  if(answered&&studyMode==="review"&&reviewIndex===SHAPES.length-1){
+   return "「次の問題」をタップして復習を完了します。";
+  }
+  return rootAdvanceText();
+ }
+ return advanceMode==="0"?"次の問題：ボタンをタップ":"次の問題：回答後 "+advanceMode+" 秒で自動";
 }
 function showAdvanceInfo(message){$("advanceInfo").textContent=message||advanceText()}
 const tpAdvanceKey="guitarTrainer.twoPoint.advance";
-function setAdvanceMode(seconds){
- const n=Number(seconds);
- if(![0,1,2,3].includes(n))return;
- autoAdvance=n;
- $("tpAdvance").value=String(n);
- try{localStorage.setItem(tpAdvanceKey,String(n))}catch(e){}
+function setAdvanceMode(mode){
+ const value=String(mode);
+ if(!["0","root","1","2","3"].includes(value))return;
+ advanceMode=value;
+ $("tpAdvance").value=value;
+ try{localStorage.setItem(tpAdvanceKey,value)}catch(e){}
  cancelAdvance();showAdvanceInfo();
  if(answered&&!reviewFinished)scheduleAdvance();
 }
 function scheduleAdvance(){
  cancelAdvance();
- if(reviewFinished||!answered)return;
- if(autoAdvance===0){showAdvanceInfo("回答を確認したら「次の問題」をタップしてください。");return}
+ if(reviewFinished||!current||!answered)return;
+ if(advanceMode==="0"){showAdvanceInfo("回答を確認したら「次の問題」をタップしてください。");return}
  const goingToFinish=studyMode==="review"&&reviewIndex===SHAPES.length-1;
- showAdvanceInfo(autoAdvance+"秒後に"+(goingToFinish?"復習完了":"次の問題")+"へ進みます。");
+ if(advanceMode==="root"){
+  if(!goingToFinish&&!nextRootQuestion)nextRootQuestion=pickQuestion(reviewIndex+1);
+  showAdvanceInfo();
+  return;
+ }
+ showAdvanceInfo(advanceMode+"秒後に"+(goingToFinish?"復習完了":"次の問題")+"へ進みます。");
  advanceTimer=setTimeout(()=>{
   advanceTimer=null;
   if(answered&&!reviewFinished)nextQuestion();
- },autoAdvance*1000);
+ },Number(advanceMode)*1000);
 }
 function updateReviewProgress(){
  const active=studyMode==="review";
@@ -371,21 +391,13 @@ function fretSide(fret){
  if(fret>12)return {text:"12F ＜",className:"zoneUpper",label:"12フレットより奥"};
  return {text:"12F ＝",className:"zoneEqual",label:"12フレットちょうど"};
 }
-function nextQuestion(){
- cancelAdvance();
- if(studyMode==="review"){
-  if(reviewFinished)return;
-  if(current&&count>0)reviewIndex++;
-  if(reviewIndex>=SHAPES.length){finishReview();return}
- }
- let pool=studyMode==="review"?[SHAPES[reviewIndex]]:eligible();
- if(!pool.length){
-  current=null;$("question").textContent="この条件では出題できません";
-  $("result").textContent="弦やShapeの設定を変更してください。";$("quizBoard").innerHTML="";return;
- }
+function pickQuestion(index){
+ let pool=studyMode==="review"?[SHAPES[index]]:eligible();
+ if(!pool.length)return null;
+ let resetUsed=false;
  if(studyMode==="quiz"&&!$("repeat").checked){
   const remaining=pool.filter(s=>!used.has(s.id));
-  if(remaining.length)pool=remaining;else used.clear();
+  if(remaining.length)pool=remaining;else resetUsed=true;
  }
  const shape=pool[intRand(pool.length)];
  let anchors=candidatesFor(shape),usedFallback=false;
@@ -393,11 +405,26 @@ function nextQuestion(){
   anchors=candidatesFor(shape,{string:"all",frets:24});usedFallback=true;
   if(!anchors.length)anchors=candidatesFor(shape,{string:"all",frets:24,rootMode:"random"});
  }
- if(!anchors.length){
-  current=null;$("question").textContent="この設定では出題できません";
-  $("result").textContent="ルート・弦・フレット範囲を変更してください。";return;
+ if(!anchors.length)return null;
+ return {...anchors[intRand(anchors.length)],usedFallback,resetUsed};
+}
+function nextQuestion(){
+ cancelAdvance();
+ const queued=current&&answered?nextRootQuestion:null;
+ nextRootQuestion=null;
+ if(studyMode==="review"){
+  if(reviewFinished)return;
+  if(current&&count>0)reviewIndex++;
+  if(reviewIndex>=SHAPES.length){finishReview();return}
  }
- current=anchors[intRand(anchors.length)];
+ current=queued||pickQuestion(reviewIndex);
+ if(!current){
+  answered=false;$("question").textContent="この条件では出題できません";
+  $("result").textContent="弦やShapeの設定を変更してください。";$("quizBoard").innerHTML="";
+  showAdvanceInfo();return;
+ }
+ const {shape,usedFallback,resetUsed}=current;
+ if(resetUsed)used.clear();
  if(studyMode==="review"&&Math.max(current.f,current.target.f)>Number($("frets").value))$("frets").value="24";
  used.add(shape.id);answered=false;tried=null;tapKind=null;count++;
  const arrow=shape.direction==="A"?"↑":"↓";
@@ -517,7 +544,22 @@ function setAnswerMode(mode){
  $("playMode").setAttribute("aria-pressed",String(mode==="play"));
  $("playOptions").classList.toggle("active",mode==="play");
  if(mode==="play")$("playStatus").textContent=inputReady?"入力中：単音を弾いてください":"ギタートレーナーの「ギター入力 ON」を押してください";
- if(changed){current=null;count=0;reviewIndex=0;reviewFinished=false;nextQuestion()}else showBoard();
+ if(changed){current=null;count=0;reviewIndex=0;reviewFinished=false;nextQuestion()}
+ else{showBoard();if(answered&&!reviewFinished)scheduleAdvance()}
+}
+function handleDetectedPitch(midi){
+ const now=performance.now();
+ if(advanceMode==="root"&&now<ignorePitchUntil)return;
+ if(advanceMode==="root"&&answered){
+  const root=nextRootQuestion;
+  if(inputReady&&root&&midi===OPEN[root.s-1]+root.f){
+   ignorePitchUntil=now+180;
+   nextQuestion();
+  }
+  return;
+ }
+ playDetectedPitch(midi);
+ if(advanceMode==="root"&&answered)ignorePitchUntil=now+180;
 }
 function playDetectedPitch(midi){
  if(answerMode!=="play"||!current||answered||!Number.isInteger(midi)||midi<35||midi>110)return;
@@ -560,11 +602,12 @@ window.addEventListener("message",event=>{
  if(event.origin!==location.origin||event.source!==window.parent)return;
  const data=event.data;
  if(!data||data.source!=="guitar-trainer"||typeof data.type!=="string")return;
- if(data.type==="pitch"&&Number.isInteger(data.midi))playDetectedPitch(data.midi);
+ if(data.type==="pitch"&&Number.isInteger(data.midi))handleDetectedPitch(data.midi);
  if(data.type==="setAdvance")setAdvanceMode(data.seconds);
  if(data.type==="inputState"){
     inputReady=!!data.on;
     if(answerMode==="play")$("playStatus").textContent=inputReady?"入力中：単音を弾いてください":"ギタートレーナーの「ギター入力 ON」を押してください";
+    if(advanceMode==="root")showAdvanceInfo();
  }
 });
 $("tapMode").onclick=()=>setAnswerMode("tap");
@@ -583,7 +626,11 @@ $("playedString").onchange=()=>{
 for(const name of NAMES){const o=new Option(name,name);$("key").add(o)}
 $("key").value="C";
 for(const degree of DEG_NAMES){$("degree").add(new Option(degree,degree))}
-$("rootMode").onchange=()=>{$("key").disabled=$("rootMode").value==="random";nextQuestion()};
+$("rootMode").onchange=()=>{
+ $("key").disabled=$("rootMode").value==="random";
+ nextRootQuestion=null;
+ nextQuestion();
+};
 for(const id of ["key","degree","direction","shapeNum","string","frets","repeat"])$(id).addEventListener("change",()=>{
  cancelAdvance();current=null;count=0;reviewIndex=0;reviewFinished=false;nextQuestion();
 });
