@@ -275,10 +275,11 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
 const tpFrame=$('tpFrame');
 function tpInputState(){
  const btn=$('tpInputBtn'),status=$('tpInputStatus');
+ const measuring=on&&$('st').textContent==='ノイズ測定中';
  btn.textContent=on?'ギター入力 OFF':'ギター入力 ON';
  btn.classList.toggle('on',on);
- status.textContent=on?($('st').textContent==='ノイズ測定中'?'ノイズ測定中。弾かずにお待ちください。':'入力中：音を検出できます'):'入力OFF：タップモードはそのまま利用できます';
- if(tpFrame.contentWindow&&tpFrame.dataset.loaded)tpFrame.contentWindow.postMessage({source:'guitar-trainer',type:'inputState',on},location.origin);
+ status.textContent=on?(measuring?'ノイズ測定中。弾かずにお待ちください。':'入力中：単音を弾いてください'):'入力OFF：タップモードはそのまま利用できます';
+ if(tpFrame.contentWindow&&tpFrame.dataset.loaded)tpFrame.contentWindow.postMessage({source:'guitar-trainer',type:'inputState',on:on&&!measuring},location.origin);
 }
 $('tpInputBtn').onclick=async()=>{
  if(on){stop();return}
@@ -321,6 +322,7 @@ window.addEventListener('resize',()=>requestAnimationFrame(resizeTwoPoint));
 let stream=null,ctx=null,an=null,buf=null,on=false,loopGeneration=0,lastStable=null,lastStableAt=0,lastResult={hz:0,clarity:0,rms:0,window:4096};
 let noiseFloor=.00020,noiseSamples=[],calibrateUntil=0,noteGateUntil=0,previousRms=0,pluckConsumed=false,lastPluckAt=0,releaseFrames=0
 ;
+let tpNoiseSamples=[],tpThreshold=.000018,tpPitch=null,tpActive=false;
 async function list(keep){let ins=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');$('dev').innerHTML='';ins.forEach((d,i)=>$('dev').add(new Option(d.label||('入力 '+(i+1)),d.deviceId)));$('dev').disabled=!ins.length;if(keep&&ins.some(d=>d.deviceId===keep))$('dev').value=keep}
 
 function stop(){loopGeneration++;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;if(ctx)ctx.close();ctx=null;an=null;buf=null;on=false;$('ib').textContent='ギター入力 ON';$('st').textContent='入力OFF';$('active').textContent='—';$('lev').style.width='0%';tpInputState()}
@@ -331,7 +333,7 @@ async function connect(id,retry=0){const desired=[...$('dev').options].find(o=>o
 );const t=stream.getAudioTracks()[0],settings=t.getSettings?t.getSettings():{}
 ;const actual=t.label||'Audio Input',mismatch=!!id&&((settings.deviceId&&settings.deviceId!==id)||(/THR/i.test(desired)&&!/THR/i.test(actual)));$('routeDiag').textContent='選択：'+desired+' ／ 実際：'+actual+' ／ '+(settings.sampleRate||'?')+'Hz ／ '+(settings.channelCount||'?')+'ch'+(mismatch?' ／ 不一致':' ／ 一致')
 ;if(mismatch&&retry<2){stream.getTracks().forEach(x=>x.stop());stream=null;const fresh=(await navigator.mediaDevices.enumerateDevices()).find(x=>x.kind==='audioinput'&&/THR/i.test(x.label));if(fresh){$('routeDiag').textContent+=' → 再接続 '+(retry+1)+'/2';return connect(fresh.deviceId,retry+1)}}
-;if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=16384;src.connect(an);buf=new Float32Array(an.fftSize);noiseFloor=.00020;noiseSamples=[];calibrateUntil=performance.now()+1100;noteGateUntil=0;previousRms=0;pluckConsumed=false;lastPluckAt=0;releaseFrames=0;on=true;$('active').textContent=t.label||'Audio Input';$('st').textContent='ノイズ測定中';$('ib').textContent='ギター入力 OFF';await list(settings.deviceId||id||'');tpInputState();loop(generation)}
+;if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();const src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=16384;src.connect(an);buf=new Float32Array(an.fftSize);noiseFloor=.00020;noiseSamples=[];tpNoiseSamples=[];tpActive=false;calibrateUntil=performance.now()+1100;noteGateUntil=0;previousRms=0;pluckConsumed=false;lastPluckAt=0;releaseFrames=0;on=true;$('active').textContent=t.label||'Audio Input';$('st').textContent='ノイズ測定中';$('ib').textContent='ギター入力 OFF';await list(settings.deviceId||id||'');tpInputState();loop(generation)}
 
 $('ib').onclick=async()=>{if(on){stop();return}
 try{await connect('')}
@@ -354,12 +356,106 @@ if(!tau||cmnd[tau]>.70)return null;let better=tau;if(tau>1&&tau<max){let a=cmnd[
 return{hz:sr/better,clarity:1-cmnd[tau]}
 }
 
-function loop(generation){if(generation!==loopGeneration||!on||!an)return;an.getFloatTimeDomainData(buf);let rms=Math.sqrt(buf.reduce((s,v)=>s+v*v,0)/buf.length),w=rms>=.00025?4096:8192,start=buf.length-w,x=buf.slice(start),r=mpm(x,ctx.sampleRate,document.querySelector('.view.active')?.id==='twoPoint'?1450:700),now=performance.now();lastResult={hz:r?.hz||0,clarity:r?.clarity||0,rms,window:w}
-;$('lev').style.width=Math.min(100,rms*15000)+'%';if(now<calibrateUntil){noiseSamples.push(rms);if(noiseSamples.length>180)noiseSamples.shift();$('st').textContent='ノイズ測定中';$('diag').textContent='弦を弾かずにお待ちください ／ RMS '+rms.toFixed(5);previousRms=rms;requestAnimationFrame(()=>loop(generation));return}
-if(noiseSamples.length){let sorted=[...noiseSamples].sort((a,b)=>a-b);noiseFloor=Math.max(.00012,sorted[Math.floor((sorted.length-1)*.85)]||.00020);noiseSamples=[];$('st').textContent='入力中';tpInputState()}
+// Measure the latest 21 ms so a short, quiet pluck is not averaged into the preceding silence.
+function twoPointLevel(samples,sampleRate){
+ const size=Math.round(sampleRate*.021);
+ let sum=0,squares=0;
+ for(let i=samples.length-size;i<samples.length;i++){
+  const sample=samples[i];
+  sum+=sample;
+  squares+=sample*sample;
+ }
+ return Math.sqrt(Math.max(0,squares/size-(sum/size)**2));
+}
+function newTwoPointPitch(){
+ return {candidate:null,candidateSince:0,lastMidi:null,lastAt:-Infinity,quietSince:null,previousLevel:0,attackAt:-Infinity};
+}
+function twoPointPitchWindow(samples,sampleRate){
+ const smoothing=Math.round(sampleRate*.00018);
+ const size=Math.min(samples.length-smoothing,Math.round(sampleRate*.064));
+ const filtered=new Float32Array(size);
+ const start=samples.length-size;
+ let sum=0;
+ for(let i=start-smoothing;i<start;i++)sum+=samples[i];
+ for(let i=0;i<size;i++){
+  sum+=samples[start+i]-samples[start+i-smoothing];
+  filtered[i]=sum/smoothing;
+ }
+ return filtered;
+}
+function twoPointPitch(samples,sampleRate,level,threshold,state,now){
+ const previousLevel=state.previousLevel;
+ state.previousLevel=level;
+ if(level<threshold){
+  state.candidate=null;
+  state.quietSince??=now;
+  if(now-state.quietSince>=45)state.lastMidi=null;
+  return null;
+ }
+ state.quietSince=null;
+ if(level>=Math.max(threshold*1.5,previousLevel*1.6))state.attackAt=now;
+ const pitch=mpm(twoPointPitchWindow(samples,sampleRate),sampleRate,1450);
+ if(!pitch||pitch.clarity<.68){
+  state.candidate=null;
+  return null;
+ }
+ const midi=Math.round(69+12*Math.log2(pitch.hz/440));
+ if(state.candidate!==midi){
+  state.candidate=midi;
+  state.candidateSince=now;
+  return null;
+ }
+ if(now-state.candidateSince<20||now-state.lastAt<85)return null;
+ // A change of octave alone can be a harmonic of a ringing string. Require a new attack.
+ const samePitchClass=state.lastMidi!==null&&(midi-state.lastMidi)%12===0;
+ if(samePitchClass&&now-state.attackAt>110)return null;
+ if(midi===state.lastMidi&&now-state.lastAt<180)return null;
+ state.lastMidi=midi;
+ state.lastAt=now;
+ state.attackAt=-Infinity;
+ return midi;
+}
+function emitPitch(midi,now){
+ const pc=((midi%12)+12)%12,nm=N[pc]+(Math.floor(midi/12)-1);
+ lastStable={midi,pc,nm};lastStableAt=now;handlePitch(lastStable);
+ return nm;
+}
+function loop(generation){if(generation!==loopGeneration||!on||!an)return;an.getFloatTimeDomainData(buf);let rms=Math.sqrt(buf.reduce((s,v)=>s+v*v,0)/buf.length),now=performance.now();
+ const twoPoint=document.querySelector('.view.active')?.id==='twoPoint';
+ $('lev').style.width=Math.min(100,rms*15000)+'%';
+ if(now<calibrateUntil){
+  noiseSamples.push(rms);
+  tpNoiseSamples.push(twoPointLevel(buf,ctx.sampleRate));
+  if(noiseSamples.length>180){noiseSamples.shift();tpNoiseSamples.shift()}
+  $('st').textContent='ノイズ測定中';$('diag').textContent='弦を弾かずにお待ちください ／ RMS '+rms.toFixed(5);previousRms=rms;
+  requestAnimationFrame(()=>loop(generation));return;
+ }
+ if(noiseSamples.length){
+  let sorted=[...noiseSamples].sort((a,b)=>a-b);
+  noiseFloor=Math.max(.00012,sorted[Math.floor((sorted.length-1)*.85)]||.00020);
+  tpNoiseSamples.sort((a,b)=>a-b);
+  const quiet=tpNoiseSamples[Math.floor((tpNoiseSamples.length-1)*.85)];
+  tpThreshold=Math.max(.000018,quiet*1.35+.000006);
+  noiseSamples=[];tpNoiseSamples=[];$('st').textContent='入力中';tpInputState();
+ }
+ if(twoPoint){
+  if(!tpActive)tpPitch=newTwoPointPitch();
+  tpActive=true;
+  const level=twoPointLevel(buf,ctx.sampleRate);
+  const midi=twoPointPitch(buf,ctx.sampleRate,level,tpThreshold,tpPitch,now);
+  const status=$('tpInputStatus');
+  if(midi!==null)status.textContent='検出：'+emitPitch(midi,now);
+  else if(now-tpPitch.lastAt>800&&(tpPitch.lastMidi===null||tpPitch.candidate!==tpPitch.lastMidi)){
+   status.textContent=level<tpThreshold?'入力中：単音を弾いてください':'入力中：音程を確認中';
+  }
+  previousRms=rms;
+  requestAnimationFrame(()=>loop(generation));return;
+ }
+ tpActive=false;
+ let w=rms>=.00025?4096:8192,start=buf.length-w,x=buf.slice(start),r=mpm(x,ctx.sampleRate);
+ lastResult={hz:r?.hz||0,clarity:r?.clarity||0,rms,window:w};
 let trigger=Math.max(.00030,noiseFloor*1.55),hold=Math.max(.00018,noiseFloor*1.08),attack=rms>=trigger&&rms>=Math.max(previousRms*1.02,noiseFloor*1.20);if(rms<hold*.88){releaseFrames++;if(releaseFrames>=2)pluckConsumed=false}else releaseFrames=0;if(attack&&now-lastPluckAt>=70){noteGateUntil=now+1100;pluckConsumed=false;lastPluckAt=now}let gated=now<noteGateUntil&&rms>=hold,accepted=!!(r&&gated&&r.clarity>=.32),freshAccepted=accepted&&!pluckConsumed;previousRms=rms
-;if(freshAccepted){pluckConsumed=true;let midi=Math.round(69+12*Math.log2(r.hz/440)),pc=((midi%12)+12)%12,nm=N[pc]+(Math.floor(midi/12)-1);lastStable={midi,pc,nm}
-;lastStableAt=now;handlePitch(lastStable)}
+;if(freshAccepted){pluckConsumed=true;emitPitch(Math.round(69+12*Math.log2(r.hz/440)),now)}
 $('diag').textContent=(freshAccepted?'検出':accepted?'同じピッキング・待機':rms<trigger?'ノイズ・無視':'立ち上がり待ち')+' ／ RMS '+rms.toFixed(5)+' ／ noise '+noiseFloor.toFixed(5)+' ／ threshold '+trigger.toFixed(5)+(r?' ／ clarity '+r.clarity.toFixed(2)+' ／ '+r.hz.toFixed(1)+'Hz':'');requestAnimationFrame(()=>loop(generation))}
 
 function handlePitch(p){const active=document.querySelector('.view.active')?.id;$('noteM').textContent=p.nm;$('noteI').textContent=p.nm;$('noteN').textContent=p.nm;$('noteA').textContent=p.nm;
