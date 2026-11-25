@@ -104,7 +104,6 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   .triple{gap:4px}.pill{padding:5px}.pill b{font-size:14px}.chordBtns{max-width:100%}
   .chordBtn{height:30px;padding:0 8px;font-size:11px}
 }
-<style>
 .topControl{display:flex;align-items:center;gap:4px}
 .topControl span{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}
 @media(max-width:760px){
@@ -164,6 +163,39 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
  .score{grid-template-columns:repeat(4,1fr)!important;padding:3px!important}
  .stat{padding:2px!important}.stat b{font-size:13px!important}
 }
+@media (orientation: landscape) and (max-height: 500px) {
+  header{padding:4px max(6px,env(safe-area-inset-right)) 4px max(6px,env(safe-area-inset-left))}
+  main{padding:4px max(6px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}
+  .brand{display:none}
+  .tabs button{padding:6px 10px;font-size:13px}
+  .top-mini select,.top-mini .toolbtn{height:30px;font-size:12px;padding:0 6px}
+  .toolbar{margin-top:4px;gap:5px;min-width:0}
+  .toolbar select,.toolbar .toolbtn{height:30px;padding:0 6px;font-size:12px}
+  .field label{margin-bottom:2px;font-size:10px}
+  #practiceToolbar .chordField{display:none}
+  #practiceToolbar:has(.mode[data-mode="chord"].active) .chordField{display:block;width:100%}
+  #practiceToolbar .chordField label{display:none}
+  .chordBtn{height:26px;padding:0 8px;font-size:12px}
+  #practice .boardScroll,#quiz .boardScroll{padding:0;overflow-x:auto;overflow-y:hidden}
+  #practice .cards{gap:4px;margin-top:4px}
+  #practice .card{padding:5px 8px}
+  #practice .card h3{margin:0 0 3px;font-size:12px}
+  #practice .big{font-size:17px}
+  #practice .meta{font-size:11px;margin-top:0}
+  #practice .pill{padding:3px 5px;font-size:11px}
+  #practice .pill b{display:inline;margin-left:4px;font-size:14px}
+  #quiz.active{display:flex;flex-direction:column;gap:4px}
+  #quiz .quizTop{display:flex!important;margin:0!important}
+  #quiz .prompt{padding:4px 6px!important;margin:0!important}
+  #quiz .prompt .question{padding:0!important;font-size:16px!important}
+  #quiz .feedback:empty{display:none}
+  #quiz .score{padding:3px!important}
+  #quiz .boardScroll{margin-top:0!important}
+  #quiz .quizControls{order:1;margin:0!important;padding:4px!important}
+  #quiz .quizControls .row{gap:5px}
+  #quiz .quizControls select,#quiz .quizControls button{height:32px;padding:0 7px;font-size:12px}
+  #quiz .twoPointLink{order:2;margin:0!important}
+}
 </style>
 </head>
 <body>
@@ -204,7 +236,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
     </div>
     <div class="field"><label>指定度数だけ表示</label><select id="focus"><option value="">なし</option></select></div>
     <div class="field"><label>フレット</label><select id="range"><option value="24">0–24</option><option value="15">0–15</option><option value="12">0–12</option></select></div>
-    <div class="field"><label>コードトーン</label><div class="chordBtns" id="chordBtns">
+    <div class="field chordField"><label>コードトーン</label><div class="chordBtns" id="chordBtns">
       <button type="button" class="chordBtn active" data-chord="maj" onclick="selectChord('maj',this)">M</button><button type="button" class="chordBtn" data-chord="min" onclick="selectChord('min',this)">m</button>
       <button type="button" class="chordBtn" data-chord="7" onclick="selectChord('7',this)">7</button><button type="button" class="chordBtn" data-chord="maj7" onclick="selectChord('maj7',this)">M7</button>
       <button type="button" class="chordBtn" data-chord="min7" onclick="selectChord('min7',this)">m7</button><button type="button" class="chordBtn" data-chord="6" onclick="selectChord('6',this)">6</button>
@@ -219,7 +251,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   </div>
 </header>
 
-<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v1125-frets-b</div><main>
+<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v1126-landscape</div><main>
 <section id="practice" class="page active">
   <div class="boardScroll"><div id="practiceArea" class="area"><div id="practiceBoard" class="board"></div></div></div>
   <div class="cards">
@@ -240,7 +272,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
 </section>
 
 <section id="quiz" class="page">
-  <div style="margin:10px 0 18px;padding:13px;background:#eaf3ff;border:1px solid #b8d6f6;border-radius:12px"><b>Two-Point Shapes 専用クイズ</b><div style="font-size:13px;margin:5px 0 11px">Soloの全52パターンを指板上で回答。Root固定／ランダム・Ascending／Descending・Shape番号に対応。</div><a href="./two-point-shapes.html?v=20261126-landscape" style="display:inline-block;background:#1672ce;color:#fff;text-decoration:none;padding:10px 14px;border-radius:9px;font-weight:700">Two-Point クイズを開く →</a></div>
+  <div class="twoPointLink" style="margin:10px 0 18px;padding:13px;background:#eaf3ff;border:1px solid #b8d6f6;border-radius:12px"><b>Two-Point Shapes 専用クイズ</b><div style="font-size:13px;margin:5px 0 11px">Soloの全52パターンを指板上で回答。Root固定／ランダム・Ascending／Descending・Shape番号に対応。</div><a href="./two-point-shapes.html?v=20261126-landscape" style="display:inline-block;background:#1672ce;color:#fff;text-decoration:none;padding:10px 14px;border-radius:9px;font-weight:700">Two-Point クイズを開く →</a></div>
   <div class="quizControls">
     <div class="row">
       <div class="field"><label>出題タイプ</label><select id="quizType"><option value="interval">度数</option><option value="tension">テンション</option><option value="note">音名</option></select></div>
@@ -315,7 +347,10 @@ const CHORDS={
 let displayMode="none", soundOn=false, audioCtx=null, maxFret=24;
 function applySize(v){
   document.body.classList.remove("ipad","iphone","iphone-small","large");
-  if(v==="auto") v=window.innerWidth<700?"iphone-small":"ipad";
+  if(v==="auto"){
+    const phone=matchMedia("(pointer: coarse)").matches&&Math.min(screen.width,screen.height)<700;
+    v=phone||window.innerWidth<700?"iphone-small":"ipad";
+  }
   document.body.classList.add(v);
 }
 async function toggleSound(btn){
