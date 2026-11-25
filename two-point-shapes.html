@@ -261,7 +261,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料を基本に、△6／♭♭7のShape 1・2を修正。P8には「4弦9F→6弦7F」のDescending Shape 2を追加しています。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1125-2point</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1125-2point-b</div>
 </main>
 <script>
 "use strict";
@@ -486,7 +486,13 @@ function showBoard(){
    (minBoardWidth-nutWidth)/(1-fretRatio**visibleMax),
    minFretWidth/lastFretFraction
  );
- const fretEdge=f=>nutWidth+scaleLength*(1-fretRatio**f);
+ const fretEdges=[nutWidth];
+ for(let f=1;f<=visibleMax;f++){
+  const naturalWidth=scaleLength*(1-fretRatio)*fretRatio**(f-1);
+  const lowFretReduction=.14*Math.max(0,(12-f)/11);
+  fretEdges.push(fretEdges[f-1]+naturalWidth*(1-lowFretReduction));
+ }
+ const fretEdge=f=>fretEdges[f];
  const fretCenter=f=>(fretEdge(f-1)+fretEdge(f))/2;
  const W=fretEdge(visibleMax);
  // Use the same pixels per millimetre along and across a 648 mm scale guitar.
