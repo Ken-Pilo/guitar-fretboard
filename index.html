@@ -219,7 +219,7 @@ body.ipad .boardScroll{zoom:1.04} body.iphone .boardScroll{zoom:.72} body.iphone
   </div>
 </header>
 
-<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v1125-frets</div><main>
+<div style="position:fixed;right:4px;bottom:3px;font-size:9px;color:#aaa;z-index:9999">v1125-frets-b</div><main>
 <section id="practice" class="page active">
   <div class="boardScroll"><div id="practiceArea" class="area"><div id="practiceBoard" class="board"></div></div></div>
   <div class="cards">
@@ -406,11 +406,12 @@ function drawBoard(areaId,boardId,isQuiz=false){
     (minBoardWidth-nutWidth)/(1-fretRatio**visibleMax),
     minFretWidth/lastFretFraction
   );
+  const twelfthFretWidth=scaleLength*(1-fretRatio)*fretRatio**11;
   const fretEdges=[nutWidth];
   for(let f=1;f<=visibleMax;f++){
     const naturalWidth=scaleLength*(1-fretRatio)*fretRatio**(f-1);
-    const lowFretReduction=.14*Math.max(0,(12-f)/11);
-    fretEdges.push(fretEdges[f-1]+naturalWidth*(1-lowFretReduction));
+    const width=f<12?twelfthFretWidth+(naturalWidth-twelfthFretWidth)*.35:naturalWidth;
+    fretEdges.push(fretEdges[f-1]+width);
   }
   const fretEdge=f=>fretEdges[f];
   const fretCenter=f=>(fretEdge(f-1)+fretEdge(f))/2;
