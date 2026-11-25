@@ -261,7 +261,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料を基本に、△6／♭♭7のShape 1・2を修正。P8には「4弦9F→6弦7F」のDescending Shape 2を追加しています。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1125-2point-b</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1125-2point-c</div>
 </main>
 <script>
 "use strict";
@@ -536,23 +536,37 @@ function showBoard(){
    cell.append(bubble);cell.addEventListener("click",()=>choose(s+1,f));if(answerMode==="play"){cell.disabled=true;cell.style.cursor="default"}board.append(cell);
   }
  }
- // ルートの場所を常に画面中央へ。左右余白を増やすことで端のフレットも中央にする
- centerRoot();
- requestAnimationFrame(centerRoot);
+ // Frame all possible shapes from this root so the view gives no answer hint.
+ const rootCenter=current.f===0?nutWidth/2:fretCenter(current.f);
+ const frets=[current.f];
+ for(const shape of SHAPES){
+  const target=targetFor(shape,current.s,current.f);
+  if(target&&target.f<=visibleMax)frets.push(target.f);
+ }
+ const first=Math.min(...frets),last=Math.max(...frets);
+ const left=first===0?0:fretEdge(first-1);
+ const right=fretEdge(last);
+ const frame=()=>frameBoard(rootCenter,left,right);
+ frame();
+ requestAnimationFrame(frame);
 }
-function centerRoot(){
- if(!current)return;
+function frameBoard(rootCenter,left,right){
  const scroll=$("quizBoardScroll"),stage=$("quizBoardStage"),board=$("quizBoard");
- const zoom=Number.parseFloat(getComputedStyle(stage).zoom)||1;
- const gutter=Math.ceil(scroll.clientWidth/(2*zoom));
+ const viewport=scroll.clientWidth;
+ if(!viewport)return;
+ stage.style.zoom="";
+ const preferredZoom=Number.parseFloat(getComputedStyle(stage).zoom)||1;
+ const margin=8;
+ const zoom=Math.min(preferredZoom,(viewport-2*margin)/(right-left));
+ stage.style.zoom=zoom;
+ const gutter=Math.ceil(viewport/(2*zoom));
  stage.style.paddingLeft=gutter+"px";
  stage.style.paddingRight=gutter+"px";
- const rootCell=board.querySelector('.cell[data-string="'+current.s+'"][data-fret="'+current.f+'"]');
- if(!rootCell)return;
- const cellBox=rootCell.getBoundingClientRect(),scrollBox=scroll.getBoundingClientRect();
- const x=cellBox.left-scrollBox.left+scroll.scrollLeft+cellBox.width/2;
- const goal=Math.max(0,x-scroll.clientWidth/2);
- scroll.scrollLeft=Math.min(goal,Math.max(0,scroll.scrollWidth-scroll.clientWidth));
+ const origin=board.getBoundingClientRect().left-scroll.getBoundingClientRect().left-scroll.clientLeft+scroll.scrollLeft;
+ const centered=origin+rootCenter*zoom-viewport/2;
+ const min=origin+right*zoom-viewport+margin;
+ const max=origin+left*zoom-margin;
+ scroll.scrollLeft=Math.max(min,Math.min(max,centered));
 }
 function applySize(v){
  document.body.classList.remove("ipad","iphone","iphone-small","large");
