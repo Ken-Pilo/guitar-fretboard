@@ -16,6 +16,9 @@ body{margin:0;background:#050505;color:#fff;font-family:-apple-system,BlinkMacSy
 .tab.active{background:#242424;color:#fff;border-color:#666}
 .tp-panel{background:#050505;border:1px solid #333;border-radius:15px;overflow:hidden;padding:4px}
 .tp-frame{width:100%;display:block;height:1180px;background:#050505;border:0;overflow:hidden}
+body.tp-quiz-stage .app{max-width:none;padding:0 env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+body.tp-quiz-stage .tabs,body.tp-quiz-stage .tp-audio{display:none}
+body.tp-quiz-stage .tp-panel{padding:0;border:0;border-radius:0}
 .tp-audio{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 4px 12px}
 #tpInputBtn{flex:0 0 auto;background:#102c3f;color:#78c6ff;border-color:#2f6a94}
 #tpInputBtn.on{background:#19522e;color:#a5f3bf;border-color:#41905a}
@@ -295,16 +298,25 @@ function resizeTwoPoint(){
   const d=tpFrame.contentDocument,main=d&&d.querySelector('main');
   if(!main)return;
   const rect=main.getBoundingClientRect();
-  tpFrame.style.height=Math.max(650,Math.ceil(rect.bottom+26))+'px';
+  tpFrame.style.height=Math.max(document.body.classList.contains('tp-quiz-stage')?0:650,Math.ceil(rect.bottom+8))+'px';
  }catch(e){tpFrame.style.height='1280px'}
 }
 function openTwoPoint(){
  if(!tpFrame.dataset.loaded){
   tpFrame.dataset.loaded='1';
-  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261125-fit-shapes';
+  tpFrame.src='./two-point-shapes.html?embed=trainer&v=20261126-landscape';
  }
  requestAnimationFrame(resizeTwoPoint);
 }
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.source!==tpFrame.contentWindow)return;
+ const data=event.data;
+ if(data?.source!=='two-point'||data.type!=='quizStage'||typeof data.active!=='boolean')return;
+ if(!$('twoPoint').classList.contains('active'))return;
+ document.body.classList.toggle('tp-quiz-stage',data.active);
+ resizeTwoPoint();
+ window.scrollTo(0,0);
+});
 tpFrame.addEventListener('load',()=>{
  try{
   const d=tpFrame.contentDocument;
