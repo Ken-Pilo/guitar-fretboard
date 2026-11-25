@@ -577,9 +577,11 @@ function showBoard(){
  const first=Math.min(...frets),last=Math.max(...frets);
  const left=first===0?0:fretEdge(first-1);
  const right=fretEdge(last);
- frameBoard(rootCenter,left,right);
+ const pairFirst=Math.min(current.f,current.target.f);
+ const pairLast=Math.max(current.f,current.target.f);
+ frameBoard(rootCenter,left,right,pairFirst===0?0:fretEdge(pairFirst-1),fretEdge(pairLast));
 }
-function frameBoard(rootCenter,left,right){
+function frameBoard(rootCenter,left,right,pairLeft,pairRight){
  const scroll=$("quizBoardScroll"),stage=$("quizBoardStage"),board=$("quizBoard");
  const viewport=scroll.clientWidth;
  if(!viewport)return;
@@ -590,9 +592,14 @@ function frameBoard(rootCenter,left,right){
  stage.style.paddingRight=gutter+"px";
  const origin=board.getBoundingClientRect().left-scroll.getBoundingClientRect().left-scroll.clientLeft+scroll.scrollLeft;
  const centered=origin+rootCenter*zoom-viewport/2;
- const min=origin+right*zoom-viewport+margin;
- const max=origin+left*zoom-margin;
- scroll.scrollLeft=min<=max?Math.max(min,Math.min(max,centered)):origin+(left+right)*zoom/2-viewport/2;
+ // If the full range won't fit, keep the root and the requested shape in view.
+ const fullRangeFits=(right-left)*zoom<=viewport-2*margin;
+ const start=fullRangeFits?left:pairLeft;
+ const end=fullRangeFits?right:pairRight;
+ const preferred=fullRangeFits?centered:origin+(left+right)*zoom/2-viewport/2;
+ const min=origin+end*zoom-viewport+margin;
+ const max=origin+start*zoom-margin;
+ scroll.scrollLeft=min<=max?Math.max(min,Math.min(max,preferred)):origin+(start+end)*zoom/2-viewport/2;
 }
 function applySize(v){
  document.body.classList.remove("ipad","iphone","iphone-small","large");
