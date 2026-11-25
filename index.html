@@ -395,15 +395,28 @@ async function play(m){
 function drawBoard(areaId,boardId,isQuiz=false){
   const area=document.getElementById(areaId),board=document.getElementById(boardId);
   area.querySelectorAll(".slabel,.fnum").forEach(e=>e.remove());board.innerHTML="";
-  const visibleMax=Math.max(endF,maxFret), W=visibleMax>=24?1400:visibleMax>=15?1000:850,fw=(W-25)/visibleMax;
+  const visibleMax=Math.max(endF,maxFret);
+  const nutWidth=25;
+  const minFretWidth=44;
+  const minBoardWidth=visibleMax>=24?1400:visibleMax>=15?1000:850;
+  // The vibrating string length shrinks by one equal-tempered semitone per fret.
+  const fretRatio=2**(-1/12);
+  const lastFretFraction=(1-fretRatio)*fretRatio**(visibleMax-1);
+  const scaleLength=Math.max(
+    (minBoardWidth-nutWidth)/(1-fretRatio**visibleMax),
+    minFretWidth/lastFretFraction
+  );
+  const fretEdge=f=>nutWidth+scaleLength*(1-fretRatio**f);
+  const fretCenter=f=>(fretEdge(f-1)+fretEdge(f))/2;
+  const W=fretEdge(visibleMax);
   board.style.width=W+"px";board.style.height="382px";area.style.width=(W+30)+"px";area.style.height="395px";
   let nut=document.createElement("div");nut.className="nut";nut.style.height="382px";board.append(nut);
-  for(let f=1;f<=visibleMax;f++){let d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";d.style.height="382px";board.append(d)}
-  [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>marker(board,25+(f-.5)*fw,186));
-  [12,24].filter(f=>f<=visibleMax).forEach(f=>{marker(board,25+(f-.5)*fw,121);marker(board,25+(f-.5)*fw,251)});
+  for(let f=1;f<=visibleMax;f++){let d=document.createElement("div");d.className="fret";d.style.left=(fretEdge(f)-2)+"px";d.style.height="382px";board.append(d)}
+  [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>marker(board,fretCenter(f),186));
+  [12,24].filter(f=>f<=visibleMax).forEach(f=>{marker(board,fretCenter(f),121);marker(board,fretCenter(f),251)});
   Y.forEach((y,s)=>{
     
-    let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.left="25px";st.style.width=(W-25)+"px";st.style.height=(2+s*.55)+"px";st.style.opacity=enabledStrings[s]?1:.2;board.append(st);
+    let st=document.createElement("div");st.className="string "+(s>=3?"wound":"");st.style.top=y+"px";st.style.left=nutWidth+"px";st.style.width=(W-nutWidth)+"px";st.style.height=(2+s*.55)+"px";st.style.opacity=enabledStrings[s]?1:.2;board.append(st);
     for(let f=0;f<=visibleMax;f++){
       let m=OPEN[s]+f,c=document.createElement("button"),b=document.createElement("span");
       c.className="cell";
@@ -413,7 +426,7 @@ function drawBoard(areaId,boardId,isQuiz=false){
         if(CHORDS[currentChord].includes(rel)) c.classList.add("show");
       }
       c.dataset.string=s;c.dataset.fret=f;c.dataset.midi=m;
-      let x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;c.style.left=x0+"px";c.style.top=(y-29)+"px";c.style.width=(x1-x0)+"px";c.style.height="58px";
+      const x0=f===0?0:fretEdge(f-1),x1=f===0?nutWidth:fretEdge(f);c.style.left=x0+"px";c.style.top=(y-29)+"px";c.style.width=(x1-x0)+"px";c.style.height="58px";
       b.className="bubble "+colorClass(isQuiz?intervalAt(m,quiz.root):intervalAt(m));b.textContent=isQuiz?"":displayText(m);
       if(!enabledStrings[s]||f<startF||f>endF)c.style.pointerEvents="none";
       if(!enabledStrings[s]||f<startF||f>endF)c.style.opacity=.18;
