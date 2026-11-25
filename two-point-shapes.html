@@ -88,23 +88,23 @@ body.trainer-embed .questionArrow{color:#ffb35b}
 .desc{font-size:13px;color:var(--muted)}
 .meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px}
 .boardScroll{width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;overscroll-behavior-x:contain}
-.boardStage{display:flex;align-items:flex-start;width:max-content;min-height:395px;box-sizing:content-box}
+.boardStage{display:flex;align-items:flex-start;width:max-content;box-sizing:content-box}
 #quizArea{margin:0;flex-shrink:0}
 .area{position:relative;margin:auto;height:445px}
 .board{position:absolute;left:18px;top:6px;height:382px;background:#fff;border-right:2px solid #444}
 .nut{position:absolute;left:0;top:0;width:25px;background:linear-gradient(90deg,#1e1f21,#555,#1e1f21);border-radius:8px;z-index:6}
 .fret{position:absolute;top:0;width:4px;background:linear-gradient(90deg,#666,#ddd,#666);z-index:14}
-.string{position:absolute;background:#3f4245;z-index:15;min-height:3px}
+.string{position:absolute;background:#3f4245;z-index:15}
 .wound{background:repeating-linear-gradient(90deg,#777 0 3px,#e2e2e2 3px 5px,#777 5px 8px)}
 .slabel{position:absolute;left:0;transform:translateY(-50%);font-size:17px;font-weight:800}
 .slabel small{font-size:11px;color:#555;margin-right:5px}
 .mark{position:absolute;width:17px;height:17px;border-radius:50%;background:#cdd2d5;transform:translate(-50%,-50%);z-index:1}
 .fnum{position:absolute;top:397px;transform:translateX(-50%);font-size:12px}
 .cell{position:absolute;border:0;background:transparent;z-index:20;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
-.bubble{min-width:38px;height:38px;padding:0 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;opacity:0;transition:.1s}
+.bubble{min-width:var(--note-size);height:var(--note-size);padding:0 3px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--note-font);font-weight:800;opacity:0;transition:.1s}
 .cell.show .bubble,.cell.hit .bubble,.cell.reveal .bubble{opacity:1}
 .R{background:var(--cyan)}
-.cell.is-root .bubble{min-width:47px;height:47px;font-size:20px;font-weight:950;border:3px solid #13628c;box-shadow:0 0 0 4px #5ad7eb44;color:#123b4c}
+.cell.is-root .bubble{font-size:var(--note-font);font-weight:950;border:3px solid #13628c;box-shadow:0 0 0 4px #5ad7eb44;color:#123b4c}
 .cell.is-root{z-index:22}
 .cell.tp-answer .bubble{background:#b0e8bf;outline:3px solid var(--ok)}
 .cell.tp-wrong .bubble{background:#ffbcbc;outline:3px solid var(--ng)}
@@ -261,7 +261,7 @@ body.trainer-embed #embeddedSize{background:#181818;border-color:#444;color:#fff
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料を基本に、△6／♭♭7のShape 1・2を修正。P8には「4弦9F→6弦7F」のDescending Shape 2を追加しています。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1018-2point-p8-53a</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1125-2point</div>
 </main>
 <script>
 "use strict";
@@ -467,7 +467,6 @@ function reveal(){
  $("tapDetail").textContent="タップした位置：—（答えを表示中）";
  showBoard();scheduleAdvance();
 }
-const Y=[24,89,154,219,284,349];
 function mark(board,x,y){
  const dot=document.createElement("div");dot.className="mark";dot.style.left=x+"px";dot.style.top=y+"px";board.append(dot);
 }
@@ -477,24 +476,45 @@ function showBoard(){
  area.querySelectorAll(".slabel,.fnum").forEach(el=>el.remove());
  board.innerHTML="";
  const visibleMax=Number($("frets").value);
- const W=visibleMax>=24?1400:visibleMax>=15?1000:850, fw=(W-25)/visibleMax;
- board.style.width=W+"px";board.style.height="382px";
- area.style.width=(W+30)+"px";area.style.height="395px";
- const nut=document.createElement("div");nut.className="nut";nut.style.height="382px";board.append(nut);
+ const nutWidth=25;
+ const minFretWidth=44;
+ const minBoardWidth=visibleMax>=24?1400:visibleMax>=15?1000:850;
+ // The vibrating string length shrinks by one equal-tempered semitone per fret.
+ const fretRatio=2**(-1/12);
+ const lastFretFraction=(1-fretRatio)*fretRatio**(visibleMax-1);
+ const scaleLength=Math.max(
+   (minBoardWidth-nutWidth)/(1-fretRatio**visibleMax),
+   minFretWidth/lastFretFraction
+ );
+ const fretEdge=f=>nutWidth+scaleLength*(1-fretRatio**f);
+ const fretCenter=f=>(fretEdge(f-1)+fretEdge(f))/2;
+ const W=fretEdge(visibleMax);
+ // Use the same pixels per millimetre along and across a 648 mm scale guitar.
+ const pixelsPerMm=scaleLength/648;
+ const stringSpacing=9*pixelsPerMm;
+ const edgePadding=stringSpacing*.65;
+ const boardHeight=edgePadding*2+5*stringSpacing;
+ const stringY=s=>edgePadding+s*stringSpacing;
+ board.style.setProperty("--note-size",Math.min(38,stringSpacing-4)+"px");
+ board.style.setProperty("--note-font",Math.min(13,(stringSpacing-4)*.65)+"px");
+ board.style.width=W+"px";board.style.height=boardHeight+"px";
+ area.style.width=(W+30)+"px";area.style.height=(boardHeight+13)+"px";
+ const nut=document.createElement("div");nut.className="nut";nut.style.height="100%";board.append(nut);
  for(let f=1;f<=visibleMax;f++){
-  const d=document.createElement("div");d.className="fret";d.style.left=(25+f*fw)+"px";d.style.height="382px";board.append(d);
+  const d=document.createElement("div");d.className="fret";d.style.left=(fretEdge(f)-2)+"px";d.style.height="100%";board.append(d);
  }
- [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>mark(board,25+(f-.5)*fw,186));
- [12,24].filter(f=>f<=visibleMax).forEach(f=>{mark(board,25+(f-.5)*fw,121);mark(board,25+(f-.5)*fw,251)});
- Y.forEach((y,s)=>{
+ [3,5,7,9,15,17,19,21].filter(f=>f<=visibleMax).forEach(f=>mark(board,fretCenter(f),stringY(2.5)));
+ [12,24].filter(f=>f<=visibleMax).forEach(f=>{mark(board,fretCenter(f),stringY(1.5));mark(board,fretCenter(f),stringY(3.5))});
+ for(let s=0;s<6;s++){
+  const y=stringY(s), thickness=2+s*.55;
   const wire=document.createElement("div");wire.className="string "+(s>=3?"wound":"");
-  wire.style.top=y+"px";wire.style.left="25px";wire.style.width=(W-25)+"px";wire.style.height=(2+s*.55)+"px";board.append(wire);
+  wire.style.top=(y-thickness/2)+"px";wire.style.left=nutWidth+"px";wire.style.width=(W-nutWidth)+"px";wire.style.height=thickness+"px";board.append(wire);
   for(let f=0;f<=visibleMax;f++){
    const cell=document.createElement("button"),bubble=document.createElement("span");
    cell.type="button";cell.className="cell";cell.dataset.string=s+1;cell.dataset.fret=f;
    cell.setAttribute("aria-label",(s+1)+"弦 "+f+"フレット");
-   const x0=f===0?0:25+(f-1)*fw,x1=f===0?25:25+f*fw;
-   cell.style.left=x0+"px";cell.style.top=(y-29)+"px";cell.style.width=(x1-x0)+"px";cell.style.height="58px";
+   const x0=f===0?0:fretEdge(f-1),x1=f===0?nutWidth:fretEdge(f);
+   cell.style.left=x0+"px";cell.style.top=(y-stringSpacing/2)+"px";cell.style.width=(x1-x0)+"px";cell.style.height=stringSpacing+"px";
    bubble.className="bubble";
    if(s+1===current.s&&f===current.f){
     cell.classList.add("show","is-root");bubble.classList.add("R");bubble.textContent="R";
@@ -509,7 +529,7 @@ function showBoard(){
    }
    cell.append(bubble);cell.addEventListener("click",()=>choose(s+1,f));if(answerMode==="play"){cell.disabled=true;cell.style.cursor="default"}board.append(cell);
   }
- });
+ }
  // ルートの場所を常に画面中央へ。左右余白を増やすことで端のフレットも中央にする
  centerRoot();
  requestAnimationFrame(centerRoot);
