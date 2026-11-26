@@ -279,16 +279,16 @@ body.trainer-embed.quiz-stage .meta button{background:#181818;color:#fff;border-
  </div>
  <div id="studyFinished" class="studyFinished" role="status">全53形の復習が完了しました！<div style="font-size:13px;font-weight:500;margin-top:7px">「最初から復習」で何度でも確認できます。</div></div>
  <div class="controls">
-  <button class="primary" id="next">次の問題</button><button id="reveal">答えを見る</button><button id="reset">成績をリセット</button>
+  <button class="primary" id="next">次の問題</button><button id="reset">成績をリセット</button>
  </div>
 </section>
 <details class="card"><summary>クイズのルール・補正について</summary><div class="detail">
- 同じ度数でも、指定されたAscending / DescendingおよびShape番号の位置が正解です。別のShape番号でも度数と方向が一致すれば間違い扱いにせず黄色で案内します。
+ 同じ度数でも、指定されたAscending / DescendingおよびShape番号の位置が正解です。度数と方向が合っていても、Shape番号が違う場合は黄色で番号を案内します。同じ問題に正解するまで解き直します。
  ルートが3弦と2弦の境界をまたぐときは、通常の完全4度チューニングとは1フレット違う位置になるので、自動補正しています。
  ♯2／♯9はm3と、♯4／♯11は♭5と、♯5はm6と、♭♭7は△6と同じ音の位置を使用します。
  Shape番号はPDF資料を基本に、△6／♭♭7のShape 1・2を修正。P8には「4弦9F→6弦7F」のDescending Shape 2を追加しています。
 </div></details>
-<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1126-2point-landscape</div>
+<div class="footer">正解の形：Solo / Trio Software「Complete Two-Point Intervallic Functions Shapes Diagrams」に準拠。v1126-2point-retry</div>
 </main>
 <script>
 "use strict";
@@ -370,7 +370,7 @@ function setStudyMode(mode){
 function finishReview(){
  cancelAdvance();reviewFinished=true;answered=true;
  $("studyFinished").classList.add("show");$("qIndex").textContent="復習完了 "+SHAPES.length+" / "+SHAPES.length;
- $("next").disabled=true;$("reveal").disabled=true;
+ $("next").disabled=true;
  $("result").className="result good";
  $("result").textContent="全"+SHAPES.length+"形を最初から最後まで確認しました。";
  updateReviewProgress();showAdvanceInfo();
@@ -438,6 +438,7 @@ function pickQuestion(index){
 function nextQuestion(){
  cancelAdvance();
  if(!inQuiz){current=null;$("startQuiz").textContent="問題を始める";return}
+ if(current&&!answered)return;
  const queued=current&&answered?nextRootQuestion:null;
  nextRootQuestion=null;
  if(studyMode==="review"){
@@ -465,38 +466,32 @@ function nextQuestion(){
  $("qIndex").textContent=studyMode==="review"?"復習 "+(reviewIndex+1)+" / "+SHAPES.length:"第"+count+"問";
  $("result").className="result";$("result").textContent=answerMode==="tap"?"正解の位置をタップしてください。":"ギターの単音を弾いてください。";
  $("tapDetail").textContent=answerMode==="tap"?"タップした位置：—":"演奏した音：—";
- $("reveal").disabled=false;$("next").disabled=false;
+ $("next").disabled=true;
  $("studyFinished").classList.remove("show");updateReviewProgress();showAdvanceInfo();showBoard();
 }
 function choose(s,f,fromGuitar=false){
  if(!current||answered||(answerMode==="play"&&!fromGuitar))return;
- answered=true;tried={s,f};
+ tried={s,f};
  const note=noteInfo(s,f);
  $("tapDetail").textContent=(fromGuitar?"演奏":"タップ")+"： "+s+"弦 "+f+"F　｜　音名 "+note.note+"　｜　度数 "+note.degree;
  const correctPos=current.target.s+"弦 "+current.target.f+"F";
  const ok=s===current.target.s&&f===current.target.f;
  const alternative=ok?null:alternativeShapeAt(s,f);
  if(ok){
-  tapKind="correct";correct++;attempts++;
+  answered=true;tapKind="correct";correct++;attempts++;
+  $("next").disabled=false;
   $("result").className="result good";
   $("result").textContent="正解！ 指定のShape "+current.shape.num+"です。正解位置： "+correctPos+"。";
  }else if(alternative){
   tapKind="alternate";alternateCount++;
   $("result").className="result alternate";
-  $("result").textContent="形は合っています！ ここは同じ"+current.shape.degree+"の「"+(alternative.direction==="A"?"Ascending":"Descending")+" Shape "+alternative.num+"」です。今回の指定はShape "+current.shape.num+"。緑がその正解位置（"+correctPos+"）です。";
+  $("result").textContent="度数と方向は合っています。選んだのは Shape "+alternative.num+" です。Shape "+current.shape.num+" を選び直してください。";
  }else{
   tapKind="wrong";attempts++;
   $("result").className="result bad";
-  $("result").textContent="指定のShapeとは異なる位置です。タップした度数は "+note.degree+"。緑が正解位置（"+correctPos+"）です。";
+  $("result").textContent="指定のShapeとは異なる位置です。タップした度数は "+note.degree+"。同じ問題にもう一度答えてください。";
  }
- updateScore();$("reveal").disabled=true;showBoard();scheduleAdvance();
-}
-function reveal(){
- if(!current||answered)return;
- answered=true;tried=null;tapKind=null;$("reveal").disabled=true;
- $("result").className="result";$("result").textContent="正解位置： "+current.target.s+"弦 "+current.target.f+"F（"+current.shape.degree+" / "+(current.shape.direction==="A"?"Ascending":"Descending")+" Shape "+current.shape.num+"）。";
- $("tapDetail").textContent="タップした位置：—（答えを表示中）";
- showBoard();scheduleAdvance();
+ updateScore();showBoard();if(ok)scheduleAdvance();
 }
 function mark(board,x,y){
  const dot=document.createElement("div");dot.className="mark";dot.style.left=x+"px";dot.style.top=y+"px";board.append(dot);
@@ -556,7 +551,7 @@ function showBoard(){
    if(s+1===current.s&&f===current.f){
     cell.classList.add("show","is-root");bubble.classList.add("R");bubble.textContent="R";
    }
-   if(answered&&tried&&tried.s===s+1&&tried.f===f&&(tried.s!==current.target.s||tried.f!==current.target.f)){
+   if(tried&&tried.s===s+1&&tried.f===f&&(tried.s!==current.target.s||tried.f!==current.target.f)){
     cell.classList.add("reveal",tapKind==="alternate"?"tp-alternate":"tp-wrong");
     const alt=tapKind==="alternate"?alternativeShapeAt(s+1,f):null;
     bubble.textContent=alt?"S"+alt.num:"×";
@@ -662,37 +657,30 @@ function playDetectedPitch(midi){
  const playedName=NAMES[pitchClass(midi)]+(Math.floor(midi/12)-1);
  const rel=DEGREE_AT_SEMITONE[pitchClass(midi-current.pitch)];
  const expectedMidi=OPEN[current.target.s-1]+current.target.f;
- const targetName=NAMES[pitchClass(expectedMidi)]+(Math.floor(expectedMidi/12)-1);
  $("playStatus").textContent="検出： "+playedName+"　｜　ルートから "+rel;
  const chosen=$("playedString").value;
  if(chosen==="auto"){
    $("tapDetail").textContent="演奏： "+playedName+"　｜　度数 "+rel+"　｜　弦・フレット位置は未判定";
    if(pitchClass(midi)===pitchClass(expectedMidi)){
      answered=true;tapKind="pitch";tried=null;pitchOnly++;
+     $("next").disabled=false;
      $("result").className="result good";
      if(midi===expectedMidi){
        $("result").textContent="指定の度数（"+current.shape.degree+"）と音高が一致しました。音だけではShape番号や弦の位置は確定できません。緑が指定Shape（"+current.target.s+"弦 "+current.target.f+"F）です。";
      }else{
-       $("result").textContent="指定の度数（"+current.shape.degree+"）に一致しました。検出："+playedName+"／指定："+targetName+"。高音域では1オクターブ低く検出されることがあります。自動モードは度数一致として記録し、オクターブ・Shapeの正否は確定しません。緑が指定位置です。";
+       $("result").textContent="指定の度数（"+current.shape.degree+"）に一致しました。検出："+playedName+"。高音域では1オクターブ低く検出されることがあります。自動モードは度数一致として記録し、オクターブ・Shapeの正否は確定しません。緑が指定位置です。";
      }
-     $("reveal").disabled=true;updateScore();showBoard();scheduleAdvance();
+     updateScore();showBoard();scheduleAdvance();
    }else{
      $("result").className="result";
-     $("result").textContent="検出："+playedName+"（"+rel+"）。指定："+targetName+"。もう一度弾いてください。";
+     $("result").textContent="検出："+playedName+"（"+rel+"）。同じ問題をもう一度弾いてください。";
    }
    return;
  }
  const playedS=Number(chosen),f=midi-OPEN[playedS-1];
  $("tapDetail").textContent="演奏： "+playedName+"　｜　"+playedS+"弦 "+(f>=0&&f<=24?f+"F":"範囲外")+"　｜　度数 "+rel;
  if(f<0||f>24){$("result").className="result";$("result").textContent="選択した"+playedS+"弦では検出音が0〜24Fの範囲外です。実際に弾いた弦を確認してください。";return}
- if(midi===expectedMidi){
-   choose(playedS,f,true);
- }else{
-   $("result").className="result";
-   $("result").textContent=pitchClass(midi)===pitchClass(expectedMidi)
-    ?"指定の度数は一致していますが、検出："+playedName+"／指定："+targetName+"。高音域ではオクターブ誤検出の可能性があります。弦指定時は位置を確認できないため、一度消音して弾き直してください。"
-    :"検出："+playedName+"（"+rel+"）。指定："+targetName+"。もう一度弾いてください。";
- }
+ choose(playedS,f,true);
 }
 window.addEventListener("message",event=>{
  if(event.origin!==location.origin||event.source!==window.parent)return;
@@ -734,7 +722,7 @@ $("quizStudy").onclick=()=>setStudyMode("quiz");
 $("reviewStudy").onclick=()=>setStudyMode("review");
 $("reviewRestart").onclick=()=>setStudyMode("review");
 $("tpAdvance").onchange=()=>setAdvanceMode($("tpAdvance").value);
-$("next").onclick=nextQuestion;$("reveal").onclick=reveal;
+$("next").onclick=nextQuestion;
 $("size").onchange=()=>{applySize($("size").value);showBoard()};
 window.addEventListener("resize",()=>{if(inQuiz)showBoard();else applySize($("size").value)});
 $("reset").onclick=()=>{cancelAdvance();correct=0;attempts=0;alternateCount=0;pitchOnly=0;count=0;current=null;reviewIndex=0;reviewFinished=false;used.clear();updateScore();nextQuestion()};
